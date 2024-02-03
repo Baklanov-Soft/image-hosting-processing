@@ -9,8 +9,6 @@ object Dependencies {
     val catsEffect = "3.5.3"
     val circe      = "0.14.6"
 
-    val derevo = "0.13.0"
-
     val enumeratum = "1.7.3"
 
     val fs2      = "3.9.4"
@@ -45,14 +43,6 @@ object Dependencies {
     "io.circe" %% "circe-core"    % Versions.circe,
     "io.circe" %% "circe-generic" % Versions.circe,
     "io.circe" %% "circe-parser"  % Versions.circe
-  )
-
-  val derevo = Seq(
-    "tf.tofu" %% "derevo-core"           % Versions.derevo,
-    "tf.tofu" %% "derevo-cats"           % Versions.derevo,
-    "tf.tofu" %% "derevo-circe"          % Versions.derevo,
-    "tf.tofu" %% "derevo-circe-magnolia" % Versions.derevo,
-    "tf.tofu" %% "derevo-pureconfig"     % Versions.derevo
   )
 
   val enumeratum = Seq(
