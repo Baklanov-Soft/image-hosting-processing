@@ -1,6 +1,6 @@
-package com.github.baklanovsoft
+package com.github.baklanovsoft.imagehosting
 
-import com.github.baklanovsoft.common.NewtypeCodecs
+import com.github.baklanovsoft.imagehosting.common.NewtypeCodecs
 import io.circe.Codec
 import io.circe.generic.AutoDerivation
 import io.circe.generic.semiauto.deriveCodec

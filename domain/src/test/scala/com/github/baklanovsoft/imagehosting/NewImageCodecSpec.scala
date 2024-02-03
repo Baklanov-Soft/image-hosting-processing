@@ -1,4 +1,4 @@
-package com.github.baklanovsoft
+package com.github.baklanovsoft.imagehosting
 
 import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuite

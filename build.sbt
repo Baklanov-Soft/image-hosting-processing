@@ -25,6 +25,13 @@ lazy val common = (project in file("common"))
   .settings(
     name := "image-hosting-processing-common"
   )
+  .settings(
+    libraryDependencies ++= Seq(
+      cats,
+      catsEffect,
+      fs2Kafka
+    ) ++ Seq(fs2).flatten
+  )
   .dependsOn(domain)
 
 lazy val resizer = (project in file("resizer"))

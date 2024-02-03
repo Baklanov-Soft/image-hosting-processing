@@ -1,4 +1,4 @@
-package com.github.baklanovsoft.common
+package com.github.baklanovsoft.imagehosting.common
 
 import io.circe._
 import io.estatico.newtype.Coercible
