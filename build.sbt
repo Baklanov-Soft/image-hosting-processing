@@ -4,6 +4,9 @@ ThisBuild / version      := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / organization := "com.github.baklanov-soft"
 
+ThisBuild / scalacOptions += "-Ymacro-annotations"
+ThisBuild / libraryDependencies ++= Dependencies.plugins
+
 lazy val domain = (project in file("domain"))
   .settings(
     name := "image-hosting-processing-domain"
