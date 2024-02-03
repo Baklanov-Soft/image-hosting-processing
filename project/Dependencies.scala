@@ -39,16 +39,17 @@ object Dependencies {
   val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
   val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
 
-  val circe = Seq(
-    "io.circe" %% "circe-core"    % Versions.circe,
-    "io.circe" %% "circe-generic" % Versions.circe,
-    "io.circe" %% "circe-parser"  % Versions.circe
+  val codecs = Seq(
+    "io.circe"                    %% "circe-core"       % Versions.circe,
+    "io.circe"                    %% "circe-generic"    % Versions.circe,
+    "io.circe"                    %% "circe-parser"     % Versions.circe,
+    "com.beachape"                %% "enumeratum-circe" % Versions.enumeratum,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % Versions.tapir,
+    "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % Versions.tapir,
+    "com.softwaremill.sttp.tapir" %% "tapir-newtype"    % Versions.tapir
   )
 
-  val enumeratum = Seq(
-    "com.beachape" %% "enumeratum"       % Versions.enumeratum,
-    "com.beachape" %% "enumeratum-circe" % Versions.enumeratum
-  )
+  val enumeratum = "com.beachape" %% "enumeratum" % Versions.enumeratum
 
   val fs2 = Seq(
     "co.fs2" %% "fs2-core" % Versions.fs2,
@@ -81,15 +82,9 @@ object Dependencies {
   )
 
   val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-core"          % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe"    % Versions.tapir,
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"  % Versions.tapir,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui"    % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-newtype"       % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"       % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-enumeratum"    % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-derevo"        % Versions.tapir
+    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % Versions.tapir
   )
 
   object Testing {
