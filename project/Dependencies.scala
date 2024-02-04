@@ -34,6 +34,11 @@ object Dependencies {
 
   }
 
+  val plugins = Seq(
+    ("org.typelevel" %% "kind-projector"     % "0.13.2").cross(CrossVersion.full),
+    "com.olegpy"     %% "better-monadic-for" % "0.3.1"
+  ).map(compilerPlugin)
+
   val apispec = "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % Versions.apispec
 
   val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
@@ -53,7 +58,6 @@ object Dependencies {
 
   val fs2 = Seq(
     "co.fs2" %% "fs2-core" % Versions.fs2,
-    "co.fs2" %% "fs2-cats" % Versions.fs2,
     "co.fs2" %% "fs2-io"   % Versions.fs2
   )
 
@@ -68,8 +72,9 @@ object Dependencies {
   val imagscalr = "com.github.rkalla" % "imgscalr" % Versions.imgscalr
 
   val logging = Seq(
-    "ch.qos.logback" % "logback-core"  % Versions.logback,
-    "org.typelevel" %% "log4cats-core" % Versions.log4cats
+    "ch.qos.logback" % "logback-classic" % Versions.logback,
+    "org.typelevel" %% "log4cats-core"   % Versions.log4cats,
+    "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
   )
 
   val newtype = "io.estatico" %% "newtype" % Versions.newtype
