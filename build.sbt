@@ -38,4 +38,10 @@ lazy val resizer = (project in file("resizer"))
   .settings(
     name := "image-hosting-processing-resizer"
   )
+  .settings(
+    libraryDependencies ++= Seq(
+      pureconfig,
+      logging
+    ).flatten
+  )
   .dependsOn(domain, common)

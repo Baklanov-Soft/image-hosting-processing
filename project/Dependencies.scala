@@ -72,8 +72,9 @@ object Dependencies {
   val imagscalr = "com.github.rkalla" % "imgscalr" % Versions.imgscalr
 
   val logging = Seq(
-    "ch.qos.logback" % "logback-core"  % Versions.logback,
-    "org.typelevel" %% "log4cats-core" % Versions.log4cats
+    "ch.qos.logback" % "logback-classic" % Versions.logback,
+    "org.typelevel" %% "log4cats-core"   % Versions.log4cats,
+    "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
   )
 
   val newtype = "io.estatico" %% "newtype" % Versions.newtype
