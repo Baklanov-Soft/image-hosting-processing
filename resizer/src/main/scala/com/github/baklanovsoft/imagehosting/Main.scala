@@ -29,11 +29,13 @@ object Main extends IOApp with KafkaJsonDeserializer {
         .use(
           _.evalMap { commitable =>
             val msg = commitable.record.value
+            val o   = commitable.offset.offsetAndMetadata.offset()
+            val p   = commitable.offset.topicPartition.partition()
             logger
-              .info(s"Kafka read [${commitable.offset.offsetAndMetadata.offset()}] --- $msg")
+              .info(s"Kafka read [$p:$o] --- $msg")
               .as(commitable.offset)
           }
-            .through(commitBatchWithin[IO](100, 15.seconds))
+            .through(commitBatchWithin[IO](100, 7.seconds))
             .compile
             .drain
         )
