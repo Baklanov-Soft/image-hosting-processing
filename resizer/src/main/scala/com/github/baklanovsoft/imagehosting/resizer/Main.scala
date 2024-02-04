@@ -1,12 +1,14 @@
-package com.github.baklanovsoft.imagehosting
+package com.github.baklanovsoft.imagehosting.resizer
 
 import cats.effect.{ExitCode, IO, IOApp}
+import com.github.baklanovsoft.imagehosting.NewImage
 import com.github.baklanovsoft.imagehosting.imagehosting.kafka.{KafkaConsumer, KafkaJsonDeserializer}
 import fs2.kafka.commitBatchWithin
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax.CatsEffectConfigSource
+
 import scala.concurrent.duration._
 
 object Main extends IOApp with KafkaJsonDeserializer {
