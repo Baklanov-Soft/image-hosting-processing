@@ -21,6 +21,8 @@ object Dependencies {
     val logback  = "1.4.14"
     val log4cats = "2.6.0"
 
+    val minioClient = "8.5.7"
+
     val newtype = "0.4.4"
 
     val pureconfig = "0.17.5"
@@ -76,6 +78,8 @@ object Dependencies {
     "org.typelevel" %% "log4cats-core"   % Versions.log4cats,
     "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
   )
+
+  val minioClient = "io.minio" % "minio" % Versions.minioClient
 
   val newtype = "io.estatico" %% "newtype" % Versions.newtype
 
