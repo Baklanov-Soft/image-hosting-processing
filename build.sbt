@@ -2,10 +2,24 @@ import Dependencies._
 
 ThisBuild / version      := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.12"
-ThisBuild / organization := "com.github.baklanov-soft"
+ThisBuild / organization := "com.github.baklanovsoft"
 
 ThisBuild / scalacOptions += "-Ymacro-annotations"
 ThisBuild / libraryDependencies ++= Dependencies.plugins
+
+val assemblyStrategy = assembly / assemblyMergeStrategy := {
+  // to not apply local development override configurations
+  case PathList("params.conf")                                                      =>
+    MergeStrategy.discard
+
+  // openapi docs generation
+  case PathList("META-INF", "maven", "org.webjars", "swagger-ui", "pom.properties") =>
+    MergeStrategy.singleOrError
+
+  // deduplicate error because of logback, this will fix
+  case x                                                                            =>
+    MergeStrategy.first
+}
 
 lazy val domain = (project in file("domain"))
   .settings(
@@ -37,6 +51,11 @@ lazy val common = (project in file("common"))
 lazy val resizer = (project in file("resizer"))
   .settings(
     name := "image-hosting-processing-resizer"
+  )
+  .settings(
+    assemblyStrategy,
+    // for no main manifest attribute error
+    assembly / mainClass := Some("com.github.baklanovsoft.imagehosting.resizer.Main")
   )
   .settings(
     libraryDependencies ++= Seq(

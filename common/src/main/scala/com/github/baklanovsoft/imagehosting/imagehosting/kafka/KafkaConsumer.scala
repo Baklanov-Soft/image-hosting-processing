@@ -14,6 +14,7 @@ class KafkaConsumer[F[_]: Async, K, V](bootstrapServers: String, consumerGroup: 
     ConsumerSettings[F, K, V]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
       .withEnableAutoCommit(false)
+      .withAllowAutoCreateTopics(false)
       .withBootstrapServers(bootstrapServers)
       .withGroupId(consumerGroup)
 

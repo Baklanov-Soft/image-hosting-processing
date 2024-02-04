@@ -1,0 +1,56 @@
+name: publish resizer
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  IMAGE_NAME: image-hosting-processing-resizer
+
+jobs:
+  publish-container:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      #- name: run tests
+      #  run: sbt test
+
+      #- name: run integration tests
+      #  run: sbt it:test
+
+      - name: Assembly
+        run: sbt buildResizer
+
+      - name: Build image
+        run: docker build ./resizer --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Push image
+        run: |
+          
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          
+          # make version be equal to branch name (in case we want to have several branches to push container)
+          VERSION=$GITHUB_REF_NAME
+          
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

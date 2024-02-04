@@ -1,4 +1,4 @@
-package com.github.baklanovsoft.imagehosting
+package com.github.baklanovsoft.imagehosting.resizer
 
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto._

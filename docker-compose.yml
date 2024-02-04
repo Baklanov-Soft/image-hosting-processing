@@ -1,6 +1,16 @@
 version: "3"
 
 services:
+
+  resizer:
+    build: ./resizer
+    container_name: resizer
+    depends_on:
+      - kafka-init
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - CONSUMER_GROUP_ID=resizer-local-test
+
   zookeeper:
     image: docker.io/bitnami/zookeeper:3.8
     container_name: zoo
@@ -19,10 +29,28 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,UI:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://kafka:9092,UI://kafka:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,UI://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,UI://kafka:9093
       KAFKA_INTER_BROKER_LISTENER_NAME: UI
     depends_on:
       - zookeeper
+
+  kafka-init:
+    image: wurstmeister/kafka
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      
+      echo -e 'Creating kafka topics'
+      kafka-topics.sh --bootstrap-server "kafka:9092" --create --replication-factor 1 --partitions 2 --topic "new-images.v1"
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics.sh --bootstrap-server kafka:9092 --list
+      "
 
   kafka-ui:
     image: provectuslabs/kafka-ui
