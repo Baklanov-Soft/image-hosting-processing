@@ -1,4 +1,4 @@
-package com.github.baklanovsoft.imagehosting.imagehosting.kafka
+package com.github.baklanovsoft.imagehosting.kafka
 
 import cats.implicits._
 import cats.effect.kernel.{Async, Resource}
