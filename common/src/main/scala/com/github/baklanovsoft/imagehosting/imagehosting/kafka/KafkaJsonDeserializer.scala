@@ -10,12 +10,16 @@ import io.circe.jawn.decodeByteArray
 
 trait KafkaJsonDeserializer {
 
+  /** Need to specify it explicitly so it won't try to deserialize Unit with circe
+    */
+  implicit def unitDeserealizer[F[_]: Sync]: Deserializer[F, Unit] = Deserializer.unit[F]
+
   implicit def deserializer[F[_]: Sync, T: Decoder]: Deserializer[F, T] =
     Deserializer.instance { (_, _, bytes) =>
       decodeByteArray[T](bytes) match {
         case Left(value)  =>
           KafkaJsonDecodingError(
-            s"Can't decode json kafka message: ${value.getMessage}. Original message: ${new String(bytes)}"
+            s"Can't decode json kafka message: ${value.getMessage}. Original message: ${bytes}"
           )
             .raiseError[F, T]
         case Right(value) => value.pure[F]
@@ -25,5 +29,7 @@ trait KafkaJsonDeserializer {
 }
 
 object KafkaJsonDeserializer {
-  final case class KafkaJsonDecodingError(message: String) extends DecodingError
+  final case class KafkaJsonDecodingError(message: String) extends DecodingError {
+    override def toString: String = s"KafkaJsonDecodingError: $message"
+  }
 }

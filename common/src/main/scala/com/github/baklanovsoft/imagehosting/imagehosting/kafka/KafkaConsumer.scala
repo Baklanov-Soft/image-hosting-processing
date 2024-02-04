@@ -1,5 +1,6 @@
 package com.github.baklanovsoft.imagehosting.imagehosting.kafka
 
+import cats.implicits._
 import cats.effect.kernel.{Async, Resource}
 import fs2.kafka._
 import fs2.Stream
@@ -12,12 +13,14 @@ class KafkaConsumer[F[_]: Async, K, V](bootstrapServers: String, consumerGroup: 
   private val consumerSettings =
     ConsumerSettings[F, K, V]
       .withAutoOffsetReset(AutoOffsetReset.Earliest)
+      .withEnableAutoCommit(false)
       .withBootstrapServers(bootstrapServers)
       .withGroupId(consumerGroup)
 
-  def stream: Stream[F, CommittableConsumerRecord[F, K, V]] =
+  def streamR: Resource[F, Stream[F, CommittableConsumerRecord[F, K, V]]] =
     KafkaConsumer
-      .stream(consumerSettings)
-      .subscribeTo(topic)
-      .records
+      .resource(consumerSettings)
+      .evalMap { consumer =>
+        consumer.subscribeTo(topic) >> Async[F].pure(consumer.records)
+      }
 }
