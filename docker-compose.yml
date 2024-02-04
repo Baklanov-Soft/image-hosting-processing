@@ -2,9 +2,18 @@ version: "3"
 
 services:
 
-  resizer:
-    build: ./resizer
-    container_name: resizer
+  resizer1:
+    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
+    container_name: resizer1
+    depends_on:
+      - kafka-init
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - CONSUMER_GROUP_ID=resizer-local-test
+
+  resizer2:
+    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
+    container_name: resizer2
     depends_on:
       - kafka-init
     environment:
