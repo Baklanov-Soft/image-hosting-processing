@@ -19,10 +19,16 @@ val assemblyStrategy = assembly / assemblyMergeStrategy := {
   // lot of metainf folders might override this project's metainf which will result in error:
   // Could not find or load main class com.github.baklanovsoft.imagehosting.resizer.Main
 
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case PathList("META-INF", xs @ _*) =>
+    xs.map(_.toLowerCase) match {
+      // allow some metainf such as logback be written
+      case "services" :: xs =>
+        MergeStrategy.filterDistinctLines
+      case _                => MergeStrategy.discard
+    }
 
   // deduplicate error because of logback, this will fix
-  case x =>
+  case x                             =>
     MergeStrategy.first
 }
 
