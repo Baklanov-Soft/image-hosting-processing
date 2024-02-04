@@ -7,6 +7,7 @@ services:
     container_name: resizer1
     depends_on:
       - kafka-init
+      - minio
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CONSUMER_GROUP_ID: resizer-local-test
@@ -88,10 +89,10 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - images-data:/data
+      - minio-data:/data
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
 
 volumes:
-  images-data:
+  minio-data:

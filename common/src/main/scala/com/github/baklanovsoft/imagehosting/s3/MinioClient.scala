@@ -1,4 +1,4 @@
-package com.github.baklanovsoft.imagehosting.imagehosting.s3
+package com.github.baklanovsoft.imagehosting.s3
 
 import cats.effect.kernel.Sync
 import io.minio.{MakeBucketArgs, MinioClient => MinioClientJava, PutObjectArgs, RemoveBucketArgs}

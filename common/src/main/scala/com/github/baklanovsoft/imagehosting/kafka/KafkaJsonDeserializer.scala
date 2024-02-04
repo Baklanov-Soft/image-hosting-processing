@@ -1,9 +1,9 @@
-package com.github.baklanovsoft.imagehosting.imagehosting.kafka
+package com.github.baklanovsoft.imagehosting.kafka
 
 import cats.effect.kernel.Sync
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.error.DecodingError
-import com.github.baklanovsoft.imagehosting.imagehosting.kafka.KafkaJsonDeserializer.KafkaJsonDecodingError
+import KafkaJsonDeserializer.KafkaJsonDecodingError
 import fs2.kafka._
 import io.circe.Decoder
 import io.circe.jawn.decodeByteArray
