@@ -43,7 +43,8 @@ lazy val common = (project in file("common"))
     libraryDependencies ++= Seq(
       cats,
       catsEffect,
-      fs2Kafka
+      fs2Kafka,
+      minioClient
     ) ++ Seq(fs2).flatten
   )
   .dependsOn(domain)
