@@ -70,7 +70,7 @@ lazy val resizer = (project in file("resizer"))
     assembly / mainClass := Some("com.github.baklanovsoft.imagehosting.resizer.Main")
   )
   .settings(
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= Seq(imgscalr) ++ Seq(
       pureconfig,
       logging
     ).flatten
