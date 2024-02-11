@@ -29,9 +29,20 @@ class ResizingStream[F[_]: Sync: Logger] private (
             for {
               _             <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
               originalImage <- minioClient.getObject(msg.bucketId, msg.imageId.value.toString)
-              resizedImage  <- resizer.resize(originalImage)
-              _             <- minioClient.putObject(msg.bucketId, msg.imageId.value.toString, resizedImage, folder = Some("100"))
-              _             <- Logger[F].info(s"Resized image ${msg.imageId}")
+
+              _ <- resizer
+                     .resize(originalImage)
+                     .flatMap(listOfPreviews =>
+                       listOfPreviews.traverse { case (size, stream) =>
+                         minioClient.putObject(
+                           msg.bucketId,
+                           msg.imageId.value.toString,
+                           stream,
+                           folder = Some(size.folder)
+                         )
+                       } *> Logger[F].info(s"Resized image ${msg.imageId} with sizes ${listOfPreviews.map(_._1)}")
+                     )
+
             } yield ()
           }.as(commitable.offset)
         }

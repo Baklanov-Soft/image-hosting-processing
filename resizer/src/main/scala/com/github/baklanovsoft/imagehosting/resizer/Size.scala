@@ -7,6 +7,7 @@ sealed abstract class Size(val size: Int, val folder: String) extends EnumEntry
 /** Sizes to resize pictures with
   */
 object Sizes extends Enum[Size] {
+  case object Size100 extends Size(100, "100")
   case object Size250 extends Size(250, "250")
   case object Size500 extends Size(500, "500")
 
