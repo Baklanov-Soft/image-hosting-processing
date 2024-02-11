@@ -40,63 +40,50 @@ services:
       MINIO_USER: minioadmin
       MINIO_PASSWORD: minioadmin
 
-  zookeeper:
-    image: docker.io/bitnami/zookeeper:3.8
-    container_name: zoo
-    ports:
-      - "2181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-
   kafka:
-    image: wurstmeister/kafka
     container_name: kafka
+    image: bitnami/kafka:3.6.1
     ports:
       - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,UI:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,UI://kafka:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,UI://kafka:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: UI
-    depends_on:
-      - zookeeper
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_KRAFT_CLUSTER_ID: LelM2dIFQkiUFvXCEcqRWA
 
   kafka-init:
-    image: wurstmeister/kafka
     container_name: kafka-init
+    image: bitnami/kafka:3.6.1
     depends_on:
       - kafka
-    entrypoint: [ '/bin/sh', '-c' ]
-    command: |
-      "
-      # blocks until kafka is reachable
-      kafka-topics --bootstrap-server kafka:9092 --list
-      
-      echo -e 'Creating kafka topics'
-      kafka-topics.sh --bootstrap-server "kafka:9092" --create --replication-factor 1 --partitions 2 --topic "new-images.v1"
+    entrypoint: "kafka-topics.sh"
+    command: [
+      "--bootstrap-server", "kafka:9092",
+      "--create",
+      "--replication-factor", "1",
+      "--partitions", "2",
+      "--topic", "new-images.v1"
+    ]
 
-      echo -e 'Successfully created the following topics:'
-      kafka-topics.sh --bootstrap-server kafka:9092 --list
-      "
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui
-    container_name: kafka-ui
-    ports:
-      - "8080:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: test
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
-      KAFKA_CLUSTERS_0_READONLY: true
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    depends_on:
-      - kafka
+  #  kafka-ui:
+  #    image: provectuslabs/kafka-ui
+  #    container_name: kafka-ui
+  #    ports:
+  #      - "8000:8000"
+  #    environment:
+  #      SERVER_PORT: 8000
+  #      KAFKA_CLUSTERS_0_NAME: image-hosting
+  #      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+  #      KAFKA_CLUSTERS_0_READONLY: true
+  #    depends_on:
+  #      - kafka
 
   minio:
     container_name: minio
-    image: quay.io/minio/minio
+    image: quay.io/minio/minio:RELEASE.2024-01-31T20-20-33Z
     command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
@@ -107,5 +94,49 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
 
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine3.18
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: image_hosting
+      POSTGRES_USER: image_hosting
+      POSTGRES_PASSWORD: P@ssw0rd
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "image_hosting", "-U", "image_hosting" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: [ "postgres", "-c", "log_statement=all" ]
+
+  image-hosting-storage:
+    container_name: image-hosting-storage
+    image: ghcr.io/baklanov-soft/image-hosting-storage
+    environment:
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      Logging__LogLevel__Microsoft.EntityFrameworkCore: Warning
+      Minio__Endpoint: minio:9000
+      Minio__AccessKey: minioadmin
+      Minio__SecretKey: minioadmin
+      Minio__Secure: false
+      ConnectionStrings__ImageHosting: "Host=postgres;Port=5432;Database=image_hosting;Username=image_hosting;Password=P@ssw0rd;Include Error Detail=true"
+      ASPNETCORE_ENVIRONMENT: Development
+      Kafka__Producer__BootstrapServers: kafka:9092
+      Kafka__Producer__ClientId: image-hosting-storage
+      Kafka__Producer__CompressionType: gzip
+      Kafka__NewImageTopic: new-images.v1
+    ports:
+      - "8080:8080"
+    depends_on:
+      minio:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
 volumes:
   minio-data:
+  db-data:
