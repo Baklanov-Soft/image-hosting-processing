@@ -3,13 +3,15 @@ package com.github.baklanovsoft.imagehosting.s3
 import cats.effect.kernel.Sync
 import io.minio.{MakeBucketArgs, MinioClient => MinioClientJava, PutObjectArgs, RemoveBucketArgs}
 import cats.implicits._
+import com.github.baklanovsoft.imagehosting.BucketId
+
 import java.io.InputStream
 
 trait MinioClient[F[_]] {
-  def makeBucket(name: String): F[Unit]
-  def dropBucket(name: String): F[Unit]
+  def makeBucket(bucketId: BucketId): F[Unit]
+  def dropBucket(bucketId: BucketId): F[Unit]
 
-  def putObject(bucketName: String, folder: String, objectName: String, stream: InputStream): F[Unit]
+  def putObject(bucketId: BucketId, folder: String, objectName: String, stream: InputStream): F[Unit]
 }
 
 object MinioClient {
@@ -23,12 +25,12 @@ object MinioClient {
           .credentials(username, password)
           .build()
 
-      override def makeBucket(name: String): F[Unit] =
+      override def makeBucket(bucketId: BucketId): F[Unit] =
         Sync[F].delay {
-          client.makeBucket(MakeBucketArgs.builder().bucket(name).build())
+          client.makeBucket(MakeBucketArgs.builder().bucket(bucketId.value.toString).build())
         }
 
-      override def putObject(bucketName: String, folder: String, objectName: String, stream: InputStream): F[Unit] =
+      override def putObject(bucketId: BucketId, folder: String, objectName: String, stream: InputStream): F[Unit] =
         Sync[F].delay {
           val path = s"$folder/$objectName"
 
@@ -36,7 +38,7 @@ object MinioClient {
             .putObject(
               PutObjectArgs
                 .builder()
-                .bucket(bucketName)
+                .bucket(bucketId.value.toString)
                 .`object`(path)
                 .stream(stream, -1, 1024 * 1024 * 5)
                 .build()
@@ -44,9 +46,9 @@ object MinioClient {
 
         }.void
 
-      override def dropBucket(name: String): F[Unit] =
+      override def dropBucket(bucketId: BucketId): F[Unit] =
         Sync[F].delay {
-          client.removeBucket(RemoveBucketArgs.builder().bucket("name").build())
+          client.removeBucket(RemoveBucketArgs.builder().bucket(bucketId.value.toString).build())
         }
     }
 
