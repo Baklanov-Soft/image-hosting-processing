@@ -1,9 +1,9 @@
 package com.github.baklanovsoft.imagehosting.s3
 
 import cats.effect.kernel.Sync
-import io.minio.{MakeBucketArgs, MinioClient => MinioClientJava, PutObjectArgs, RemoveBucketArgs}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.BucketId
+import io.minio.{GetObjectArgs, MakeBucketArgs, MinioClient => MinioClientJava, PutObjectArgs, RemoveBucketArgs}
 
 import java.io.InputStream
 
@@ -11,7 +11,8 @@ trait MinioClient[F[_]] {
   def makeBucket(bucketId: BucketId): F[Unit]
   def dropBucket(bucketId: BucketId): F[Unit]
 
-  def putObject(bucketId: BucketId, folder: String, objectName: String, stream: InputStream): F[Unit]
+  def putObject(bucketId: BucketId, objectName: String, stream: InputStream, folder: Option[String] = None): F[Unit]
+  def getObject(bucketId: BucketId, objectName: String, folder: Option[String] = None): F[InputStream]
 }
 
 object MinioClient {
@@ -30,9 +31,15 @@ object MinioClient {
           client.makeBucket(MakeBucketArgs.builder().bucket(bucketId.value.toString).build())
         }
 
-      override def putObject(bucketId: BucketId, folder: String, objectName: String, stream: InputStream): F[Unit] =
+      override def putObject(
+          bucketId: BucketId,
+          objectName: String,
+          stream: InputStream,
+          folder: Option[String] = None
+      ): F[Unit] =
         Sync[F].delay {
-          val path = s"$folder/$objectName"
+
+          val path = folder.fold(objectName)(f => s"$f/$objectName")
 
           client
             .putObject(
@@ -45,6 +52,27 @@ object MinioClient {
             )
 
         }.void
+
+      override def getObject(
+          bucketId: BucketId,
+          objectName: String,
+          folder: Option[String] = None
+      ): F[InputStream] =
+        Sync[F].delay {
+          val path = folder.fold(objectName)(f => s"$f/$objectName")
+
+          val inputStream: InputStream =
+            client
+              .getObject(
+                GetObjectArgs
+                  .builder()
+                  .bucket(bucketId.value.toString)
+                  .`object`(path)
+                  .build()
+              )
+
+          inputStream
+        }
 
       override def dropBucket(bucketId: BucketId): F[Unit] =
         Sync[F].delay {

@@ -1,5 +1,6 @@
 package com.github.baklanovsoft.imagehosting.resizer
 
+import cats.effect.kernel.Temporal
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.baklanovsoft.imagehosting.NewImage
 import com.github.baklanovsoft.imagehosting.kafka.{KafkaConsumer, KafkaJsonDeserializer}
@@ -28,7 +29,9 @@ object Main extends IOApp with KafkaJsonDeserializer {
                       config.newImagesTopic
                     )
 
-    resizingStream <- ResizingStream.of[IO](imageConsumer, minio)
+    resizer = new ResizeJob[IO]
+
+    resizingStream <- ResizingStream.of[IO](imageConsumer, minio, resizer)(implicitly[Temporal[IO]])
 
     _ <- resizingStream.streamR.use(_.compile.drain)
 

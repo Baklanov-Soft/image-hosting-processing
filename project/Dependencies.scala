@@ -16,8 +16,6 @@ object Dependencies {
 
     val http4s = "0.23.25"
 
-    val imgscalr = "4.2-release"
-
     val logback  = "1.4.14"
     val log4cats = "2.6.0"
 
@@ -28,6 +26,8 @@ object Dependencies {
     val pureconfig = "0.17.5"
 
     val tapir = "1.9.8"
+
+    val imgscalr = "4.2"
 
     /* testing */
 
@@ -71,8 +71,6 @@ object Dependencies {
     "org.http4s" %% "http4s-ember-server" % Versions.http4s
   )
 
-  val imagscalr = "com.github.rkalla" % "imgscalr" % Versions.imgscalr
-
   val logging = Seq(
     "ch.qos.logback" % "logback-classic" % Versions.logback,
     "org.typelevel" %% "log4cats-core"   % Versions.log4cats,
@@ -95,6 +93,8 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui"    % Versions.tapir,
     "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % Versions.tapir
   )
+
+  val imgscalr = "org.imgscalr" % "imgscalr-lib" % Versions.imgscalr
 
   object Testing {
     val scalatest = "org.scalatest" %% "scalatest" % Versions.scalatest % Test

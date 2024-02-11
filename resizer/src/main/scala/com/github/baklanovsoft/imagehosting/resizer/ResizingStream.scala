@@ -1,23 +1,21 @@
 package com.github.baklanovsoft.imagehosting.resizer
 
 import cats.effect.Temporal
-import cats.effect.kernel.Resource
+import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.NewImage
 import com.github.baklanovsoft.imagehosting.kafka.KafkaConsumer
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
 import fs2.kafka.commitBatchWithin
-import io.circe.syntax._
 import org.typelevel.log4cats.{Logger, LoggerFactory}
 
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
 import scala.concurrent.duration._
 
-class ResizingStream[F[_]: Temporal: Logger] private (
+class ResizingStream[F[_]: Sync: Logger] private (
     imageConsumer: KafkaConsumer[F, Unit, NewImage],
-    minioClient: MinioClient[F]
-) {
+    minioClient: MinioClient[F],
+    resizer: ResizeJob[F]
+)(temporal: Temporal[F]) {
 
   def streamR: Resource[F, fs2.Stream[F, Unit]] =
     imageConsumer.streamR
@@ -27,31 +25,28 @@ class ResizingStream[F[_]: Temporal: Logger] private (
           val o   = commitable.offset.offsetAndMetadata.offset()
           val p   = commitable.offset.topicPartition.partition()
 
-          val streamingMessage = new ByteArrayInputStream(msg.asJson.noSpaces.getBytes(StandardCharsets.UTF_8))
-
-          Logger[F].info(s"Kafka read [$p:$o] --- $msg") *>
-            minioClient
-              .putObject(
-                msg.bucketId,
-                "kafka-output",
-                msg.imageId.value.toString,
-                streamingMessage
-              )
-              .as(commitable.offset)
+          {
+            for {
+              _             <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
+              originalImage <- minioClient.getObject(msg.bucketId, msg.imageId.value.toString)
+              resizedImage  <- resizer.resize(originalImage)
+              _             <- minioClient.putObject(msg.bucketId, msg.imageId.value.toString, resizedImage, folder = Some("100"))
+              _             <- Logger[F].info(s"Resized image ${msg.imageId}")
+            } yield ()
+          }.as(commitable.offset)
         }
-          .through(commitBatchWithin[F](100, 7.seconds))
+          .through(commitBatchWithin[F](100, 7.seconds)(temporal))
       )
 
 }
 
 object ResizingStream {
 
-  def of[F[_]: Temporal: LoggerFactory](
+  def of[F[_]: Sync: LoggerFactory](
       imageConsumer: KafkaConsumer[F, Unit, NewImage],
-      minioClient: MinioClient[F]
-  ): F[ResizingStream[F]] =
-    LoggerFactory[F].create.map { implicit logger =>
-      new ResizingStream[F](imageConsumer, minioClient)
-    }
+      minioClient: MinioClient[F],
+      resizer: ResizeJob[F]
+  )(temporal: Temporal[F]): F[ResizingStream[F]] =
+    LoggerFactory[F].create.map(implicit logger => new ResizingStream[F](imageConsumer, minioClient, resizer)(temporal))
 
 }
