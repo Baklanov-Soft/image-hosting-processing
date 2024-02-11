@@ -38,6 +38,7 @@ class ResizingStream[F[_]: Sync: Logger] private (
                            msg.bucketId,
                            msg.imageId.value.toString,
                            stream,
+                           contentType = "image/jpeg",
                            folder = Some(size.folder)
                          )
                        } *> Logger[F].info(s"Resized image ${msg.imageId} with sizes ${listOfPreviews.map(_._1)}")

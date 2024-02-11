@@ -11,7 +11,14 @@ trait MinioClient[F[_]] {
   def makeBucket(bucketId: BucketId): F[Unit]
   def dropBucket(bucketId: BucketId): F[Unit]
 
-  def putObject(bucketId: BucketId, objectName: String, stream: InputStream, folder: Option[String] = None): F[Unit]
+  def putObject(
+      bucketId: BucketId,
+      objectName: String,
+      stream: InputStream,
+      contentType: String,
+      folder: Option[String] = None
+  ): F[Unit]
+
   def getObject(bucketId: BucketId, objectName: String, folder: Option[String] = None): F[InputStream]
 }
 
@@ -35,6 +42,7 @@ object MinioClient {
           bucketId: BucketId,
           objectName: String,
           stream: InputStream,
+          contentType: String,
           folder: Option[String] = None
       ): F[Unit] =
         Sync[F].delay {
@@ -48,6 +56,7 @@ object MinioClient {
                 .bucket(bucketId.value.toString)
                 .`object`(path)
                 .stream(stream, -1, 1024 * 1024 * 5)
+                .contentType(contentType)
                 .build()
             )
 
