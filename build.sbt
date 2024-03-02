@@ -9,12 +9,12 @@ ThisBuild / libraryDependencies ++= Dependencies.plugins
 
 val assemblyStrategy = assembly / assemblyMergeStrategy := {
   // to not apply local development override configurations
-  case PathList("params.conf")                                                      =>
+  case PathList("params.conf") =>
     MergeStrategy.discard
 
   // openapi docs generation
-  case PathList("META-INF", "maven", "org.webjars", "swagger-ui", "pom.properties") =>
-    MergeStrategy.singleOrError
+  // case PathList("META-INF", "maven", "org.webjars", "swagger-ui", "pom.properties") =>
+  // MergeStrategy.singleOrError
 
   // lot of metainf folders might override this project's metainf which will result in error:
   // Could not find or load main class com.github.baklanovsoft.imagehosting.resizer.Main
@@ -71,6 +71,24 @@ lazy val resizer = (project in file("resizer"))
   )
   .settings(
     libraryDependencies ++= Seq(imgscalr) ++ Seq(
+      pureconfig,
+      logging
+    ).flatten
+  )
+  .dependsOn(domain, common)
+
+lazy val recognizer = (project in file("recognizer"))
+  .settings(
+    name := "image-hosting-processing-recognizer"
+  )
+  .settings(
+    assemblyStrategy,
+    // for no main manifest attribute error
+    assembly / mainClass := Some("com.github.baklanovsoft.imagehosting.recognizer.Main")
+  )
+  .settings(
+    libraryDependencies ++= Seq(
+      djl,
       pureconfig,
       logging
     ).flatten

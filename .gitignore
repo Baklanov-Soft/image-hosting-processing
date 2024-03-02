@@ -1,6 +1,7 @@
 params.conf
 .idea
 .bsp
+converted-to-torchscript.pt
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
