@@ -14,7 +14,7 @@ object Dependencies {
     val enumeratum = "1.7.3"
 
     val fs2      = "3.9.4"
-    val fs2Kafka = "3.2.0"
+    val fs2Kafka = "3.3.1"
 
     val logback  = "1.4.14"
     val log4cats = "2.6.0"
