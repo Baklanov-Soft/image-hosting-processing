@@ -59,19 +59,19 @@ object Main extends IOApp with KafkaJsonDeserializer with KafkaJsonSerializer {
     c.streamPerPartitionR.map(insideResource =>
       insideResource
         .map { streamPerTopic =>
-          streamPerTopic.map { case (partition, stream) =>
+          streamPerTopic.map { case (consumerPartition, consumerStream) =>
             TransactionalKafkaProducer
-              .stream(producerSettings(partition))
+              .stream(producerSettings(consumerPartition))
               .flatMap { producer =>
-                stream
+                consumerStream
                   .evalMap { commitable =>
                     val msg = commitable.record.value
                     val o   = commitable.offset.offsetAndMetadata.offset()
                     val p   = commitable.offset.topicPartition.partition()
 
-                    val offset = commitable.offset
+                    val consumerOffset = commitable.offset
 
-                    val c =
+                    val record =
                       ProducerRecord(
                         categoriesTopic,
                         (),
@@ -85,7 +85,7 @@ object Main extends IOApp with KafkaJsonDeserializer with KafkaJsonSerializer {
                       )
 
                     Logger[F].info(s"Kafka read [$p:$o] --- $msg") *>
-                      Async[F].pure(CommittableProducerRecords.one(c, offset))
+                      Async[F].pure(CommittableProducerRecords.one(record, consumerOffset))
                   }
                   .groupWithin(500, 15.seconds)
                   .evalMap(producer.produce)
