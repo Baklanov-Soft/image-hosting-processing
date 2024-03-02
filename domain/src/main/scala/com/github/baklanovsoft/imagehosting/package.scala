@@ -11,6 +11,6 @@ package object imagehosting {
 
   @newtype final case class Category(value: String)
 
-  @newtype final case class Score(value: BigDecimal)
+  @newtype final case class Score(value: Double)
 
 }

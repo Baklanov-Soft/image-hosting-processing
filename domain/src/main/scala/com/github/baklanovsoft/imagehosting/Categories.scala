@@ -9,7 +9,9 @@ final case class Categories(
     bucketId: BucketId,
     imageId: ImageId,
     categories: Map[Category, Score]
-)
+) {
+  def isEmpty: Boolean = categories.isEmpty
+}
 
 object Categories extends NewtypeCodecs with AutoDerivation {
   implicit val codec: Codec[Categories] = deriveCodec

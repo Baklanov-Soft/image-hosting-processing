@@ -1,22 +1,16 @@
 package com.github.baklanovsoft.imagehosting.recognizer
 
-import cats.implicits._
-import cats.effect.kernel.{Async, Resource}
-import cats.effect.{ExitCode, IO, IOApp}
-import com.github.baklanovsoft.imagehosting.kafka.{KafkaConsumer, KafkaJsonDeserializer, KafkaJsonSerializer}
+import cats.effect._
+import com.github.baklanovsoft.imagehosting.NewImage
+import com.github.baklanovsoft.imagehosting.kafka.{KafkaConsumer, KafkaJsonDeserializer}
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
-import com.github.baklanovsoft.imagehosting.{Categories, Category, NewImage, Score}
-import fs2.Stream
-import fs2.kafka._
-import org.apache.kafka.common.TopicPartition
-import org.typelevel.log4cats.{Logger, LoggerFactory}
+import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax.CatsEffectConfigSource
 
-import scala.concurrent.duration._
+object Main extends IOApp with KafkaJsonDeserializer {
 
-object Main extends IOApp with KafkaJsonDeserializer with KafkaJsonSerializer {
   private def app: IO[Unit] = for {
     implicit0(loggerFactory: LoggerFactory[IO]) <- IO(Slf4jFactory.create[IO])
 
@@ -26,7 +20,8 @@ object Main extends IOApp with KafkaJsonDeserializer with KafkaJsonSerializer {
 
     _ <- logger.info(s"Hello world! Config: $config")
 
-    _ = MinioClient.of[IO](host = config.minio.host, username = config.minio.user, password = config.minio.password)
+    minioClient =
+      MinioClient.of[IO](host = config.minio.host, username = config.minio.user, password = config.minio.password)
 
     imageConsumer = new KafkaConsumer[IO, Unit, NewImage](
                       config.kafkaBootstrapServers,
@@ -34,70 +29,26 @@ object Main extends IOApp with KafkaJsonDeserializer with KafkaJsonSerializer {
                       config.newImagesTopic
                     )
 
-    _ <-
-      transactionalProcessing(imageConsumer, config.kafkaBootstrapServers, config.categoriesTopic).use(_.compile.drain)
+    resources = for {
+                  detection      <- ObjectDetection.debug[IO](minioClient)
+                  categorization <- Resource.eval(
+                                      CategorizationStream
+                                        .of[IO](
+                                          imageConsumer,
+                                          minioClient,
+                                          detection,
+                                          config.kafkaBootstrapServers,
+                                          config.categoriesTopic
+                                        )(
+                                          implicitly[Temporal[IO]]
+                                        )
+                                        .map(_.streamR)
+                                    )
+                  stream         <- categorization
+                } yield stream
+
+    _ <- resources.use(_.compile.drain)
   } yield ()
-
-  private def transactionalProcessing[F[_]: Async: LoggerFactory](
-      c: KafkaConsumer[F, Unit, NewImage],
-      kafkaBootstrap: String,
-      categoriesTopic: String
-  ): Resource[F, Stream[F, ProducerResult[Unit, Categories]]] = {
-
-    implicit val l = LoggerFactory.getLogger[F]
-
-    // transactional producer requires client id per-partition
-    def producerSettings(partition: TopicPartition) =
-      TransactionalProducerSettings(
-        s"transactional-id-$partition",
-        ProducerSettings[F, Unit, Categories]
-          .withBootstrapServers(kafkaBootstrap)
-          .withEnableIdempotence(true)
-          .withRetries(10)
-      )
-
-    c.streamPerPartitionR.map(insideResource =>
-      insideResource
-        .map { streamPerTopic =>
-          streamPerTopic.map { case (consumerPartition, consumerStream) =>
-            TransactionalKafkaProducer
-              .stream(producerSettings(consumerPartition))
-              .flatMap { producer =>
-                consumerStream
-                  .evalMap { commitable =>
-                    val msg = commitable.record.value
-                    val o   = commitable.offset.offsetAndMetadata.offset()
-                    val p   = commitable.offset.topicPartition.partition()
-
-                    val consumerOffset = commitable.offset
-
-                    val record =
-                      ProducerRecord(
-                        categoriesTopic,
-                        (),
-                        Categories(
-                          msg.bucketId,
-                          msg.imageId,
-                          Map(
-                            Category("dog") -> Score(0.999999)
-                          )
-                        )
-                      )
-
-                    Logger[F].info(s"Kafka read [$p:$o] --- $msg") *>
-                      Async[F].pure(CommittableProducerRecords.one(record, consumerOffset))
-                  }
-                  .groupWithin(500, 15.seconds)
-                  .evalMap(producer.produce)
-              }
-
-          }
-        }
-        .flatMap { partitionsMap =>
-          Stream.emits(partitionsMap.toVector).parJoinUnbounded
-        }
-    )
-  }
 
   override def run(args: List[String]): IO[ExitCode] =
     app.as(ExitCode.Success)
