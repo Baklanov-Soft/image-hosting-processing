@@ -11,6 +11,9 @@ trait KafkaJsonSerializer {
 
   private val cs = Charset.forName("UTF-8")
 
+  // need to specify it implicitly because circe's serialization of unit is {} and its a valid key
+  implicit def unitSerializer[F[_]: Sync]: Serializer[F, Unit] = Serializer.unit[F]
+
   implicit def serializer[F[_]: Sync, T: Encoder]: Serializer[F, T] =
     Serializer.instance[F, T] { (_, _, element) =>
       Sync[F].delay(
