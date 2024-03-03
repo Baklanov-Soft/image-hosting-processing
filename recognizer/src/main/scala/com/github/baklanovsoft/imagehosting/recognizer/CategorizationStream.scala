@@ -18,6 +18,7 @@ class CategorizationStream[F[_]: Async: Logger](
     imageConsumer: KafkaConsumer[F, Unit, NewImage],
     minioClient: MinioClient[F],
     detection: ObjectDetection[F],
+    nsfw: NsfwDetection[F],
     kafkaBootstrap: String,
     categoriesTopic: String
 )(temporal: Temporal[F])
@@ -29,7 +30,8 @@ class CategorizationStream[F[_]: Async: Logger](
     is         <- minioClient.getObject(record.bucketId, record.imageId.value.toString)
     image      <- Async[F].delay(imageFactory.fromInputStream(is))
     categories <- detection.detect(image, record.bucketId, record.imageId)
-  } yield Categories(bucketId = record.bucketId, imageId = record.imageId, categories = categories)
+    nsfw0      <- nsfw.detect(image, record.bucketId, record.imageId)
+  } yield Categories(bucketId = record.bucketId, imageId = record.imageId, categories = categories ++ nsfw0)
 
   /** Transactional fs2kafka stream
     */
@@ -53,7 +55,7 @@ class CategorizationStream[F[_]: Async: Logger](
               .stream(producerSettings(consumerPartition))
               .flatMap { producer =>
                 consumerStream
-                  .evalMap { commitable =>
+                  .mapAsync(maxConcurrent = 10) { commitable =>
                     val msg = commitable.record.value
                     val o   = commitable.offset.offsetAndMetadata.offset()
                     val p   = commitable.offset.topicPartition.partition()
@@ -90,11 +92,14 @@ object CategorizationStream {
       imageConsumer: KafkaConsumer[F, Unit, NewImage],
       minioClient: MinioClient[F],
       detection: ObjectDetection[F],
+      nsfw: NsfwDetection[F],
       kafkaBootstrap: String,
       categoriesTopic: String
   )(temporal: Temporal[F]): F[CategorizationStream[F]] =
     LoggerFactory[F].create.map(implicit logger =>
-      new CategorizationStream[F](imageConsumer, minioClient, detection, kafkaBootstrap, categoriesTopic)(temporal)
+      new CategorizationStream[F](imageConsumer, minioClient, detection, nsfw, kafkaBootstrap, categoriesTopic)(
+        temporal
+      )
     )
 
 }

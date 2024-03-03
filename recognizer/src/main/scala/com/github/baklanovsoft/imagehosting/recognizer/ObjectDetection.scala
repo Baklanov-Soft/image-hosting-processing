@@ -76,8 +76,10 @@ object ObjectDetection {
   private def toCategories(detectedObjects: DetectedObjects): Map[Category, Score] =
     detectedObjects.getClassNames.asScala
       .zip(detectedObjects.getProbabilities.asScala)
+      .groupBy(_._1) /* this is done for cases where multiple objects of the same category found - we'll take only the
+       * biggest score */
+      .map(t => t._1 -> t._2.map(_._2).max)
       .map { case (category, score) => (Category(category), Score(score)) }
-      .toMap
 
   def production[F[_]: Sync: LoggerFactory]: Resource[F, ObjectDetection[F]] = for {
     logger         <- Resource.eval(LoggerFactory[F].create)
@@ -87,7 +89,7 @@ object ObjectDetection {
       for {
         detected  <- predict(predictor, image)
         categories = toCategories(detected)
-        _         <- logger.info(s"Detected for image $bucketId:$imageId: $detected")
+        _         <- logger.info(s"Detection result $bucketId:$imageId: $detected")
       } yield categories
   }
 
@@ -139,7 +141,7 @@ object ObjectDetection {
         for {
           detected  <- predict(predictor, image)
           categories = toCategories(detected)
-          _         <- logger.info(s"Detected for image $bucketId:$imageId: $categories")
+          _         <- logger.info(s"Detection result $bucketId:$imageId: $detected")
           _         <- Sync[F].whenA(categories.nonEmpty)(saveDebugImage(image, detected, bucketId, imageId))
         } yield categories
     }
