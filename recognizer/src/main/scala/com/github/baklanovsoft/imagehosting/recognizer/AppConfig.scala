@@ -8,6 +8,7 @@ final case class AppConfig(
     consumerGroupId: String,
     newImagesTopic: String,
     categoriesTopic: String,
+    debugCategories: Boolean,
     minio: MinioCreds
 )
 

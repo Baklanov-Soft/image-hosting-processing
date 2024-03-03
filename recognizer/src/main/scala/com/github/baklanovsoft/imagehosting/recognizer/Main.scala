@@ -30,7 +30,8 @@ object Main extends IOApp with KafkaJsonDeserializer {
                     )
 
     resources = for {
-                  detection      <- ObjectDetection.debug[IO](minioClient)
+                  detection      <- if (config.debugCategories) ObjectDetection.debug[IO](minioClient)
+                                    else ObjectDetection.production[IO]
                   categorization <- Resource.eval(
                                       CategorizationStream
                                         .of[IO](
