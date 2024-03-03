@@ -20,10 +20,11 @@ jobs:
         run: sbt scalafmtCheckAll
 
       - name: run tests
-        run: sbt clean coverage test
+        run: sbt test
+        #run: sbt clean coverage test
 
       #- name: run integration tests
       #  run: sbt coverage it:test
 
-      - name: calculate coverage
-        run: sbt coverageReport
+      # - name: calculate coverage
+      #   run: sbt coverageReport
