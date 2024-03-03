@@ -68,9 +68,7 @@ object ObjectDetection {
         predictor <- Sync[F].delay(model.newPredictor())
       } yield (model, predictor)
 
-    } { case (model, predictor) =>
-      Sync[F].delay(predictor.close()) >> Sync[F].delay(model.close())
-    }
+    } { case (model, predictor) => Sync[F].delay(predictor.close()) >> Sync[F].delay(model.close()) }
 
   private def predict[F[_]: Sync](predictor: Predictor[Image, DetectedObjects], image: Image) =
     Sync[F].delay(predictor.predict(image))
