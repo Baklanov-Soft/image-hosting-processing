@@ -15,30 +15,52 @@ services:
   #      MINIO_USER: minioadmin
   #      MINIO_PASSWORD: minioadmin
 
-  resizer1:
-    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
-    container_name: resizer1
-    depends_on:
-      - kafka-init
-      - minio
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      CONSUMER_GROUP_ID: resizer-local-test
-      MINIO_HOST: "http://minio:9000"
-      MINIO_USER: minioadmin
-      MINIO_PASSWORD: minioadmin
+  #  resizer1:
+  #    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
+  #    container_name: resizer1
+  #    depends_on:
+  #      - kafka-init
+  #      - minio
+  #    environment:
+  #      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  #      CONSUMER_GROUP_ID: resizer-local-test
+  #      MINIO_HOST: "http://minio:9000"
+  #      MINIO_USER: minioadmin
+  #      MINIO_PASSWORD: minioadmin
+  #      NEW_IMAGES_TOPIC: "new-images.v1"
+  #
+  #  resizer2:
+  #    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
+  #    container_name: resizer2
+  #    depends_on:
+  #      - kafka-init-new-images
+  #    environment:
+  #      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  #      CONSUMER_GROUP_ID: resizer-local-test
+  #      MINIO_HOST: "http://minio:9000"
+  #      MINIO_USER: minioadmin
+  #      MINIO_PASSWORD: minioadmin
+  #      NEW_IMAGES_TOPIC: "new-images.v1"
 
-  resizer2:
-    image: ghcr.io/baklanov-soft/image-hosting-processing-resizer:master
-    container_name: resizer2
+  recognizer1:
+    image: test/recognizer:latest
+    container_name: recognizer1
     depends_on:
-      - kafka-init
+      - kafka-init-new-images
+      - kafka-init-categories
+    volumes:
+      - recognizer1-djl-cache:/root/.djl.ai
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      CONSUMER_GROUP_ID: resizer-local-test
+      CONSUMER_GROUP_ID: recognizer-local-test
+      NEW_IMAGES_TOPIC: "new-images.v1"
+      CATEGORIES_TOPIC: "categories.v1"
+      NSFW_SYNSET_PATH: "synset.txt"
+      NSFW_MODEL_PATH: "nsfw_model.pt"
       MINIO_HOST: "http://minio:9000"
       MINIO_USER: minioadmin
       MINIO_PASSWORD: minioadmin
+      DEBUG_CATEGORIES: false
 
   kafka:
     container_name: kafka
@@ -138,19 +160,20 @@ services:
       "--topic", "categories.v1"
     ]
 
-  #  kafka-ui:
-  #    image: provectuslabs/kafka-ui
-  #    container_name: kafka-ui
-  #    ports:
-  #      - "8000:8000"
-  #    environment:
-  #      SERVER_PORT: 8000
-  #      KAFKA_CLUSTERS_0_NAME: image-hosting
-  #      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-  #      KAFKA_CLUSTERS_0_READONLY: true
-  #    depends_on:
-  #      - kafka
+#  kafka-ui:
+#    image: provectuslabs/kafka-ui
+#    container_name: kafka-ui
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      SERVER_PORT: 8000
+#      KAFKA_CLUSTERS_0_NAME: image-hosting
+#      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+#      KAFKA_CLUSTERS_0_READONLY: true
+#    depends_on:
+#      - kafka
 
 volumes:
   minio-data:
   db-data:
+  recognizer1-djl-cache:

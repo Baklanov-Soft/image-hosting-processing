@@ -10,9 +10,9 @@ import ai.djl.translate.Translator
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.{BucketId, Category, ImageId, Score}
-import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.{Logger, LoggerFactory}
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import scala.jdk.CollectionConverters._
 
 trait NsfwDetection[F[_]] {
@@ -24,37 +24,44 @@ trait NsfwDetection[F[_]] {
 
 object NsfwDetection {
 
-  private def buildTranslator[F[_]: Sync](synsetPath: String): F[Translator[Image, Classifications]] = Sync[F].delay {
-    // copypasted from here https://github.com/deepjavalibrary/djl/issues/1419
-    ImageClassificationTranslator
-      .builder()
-      .optSynsetArtifactName(synsetPath)
-      .addTransform(new Resize(256))
-      // from the model description it was trained on 224x224 images so looks like it fits
-      .addTransform(new CenterCrop(224, 224))
-      .addTransform(new ToTensor())
-      .addTransform(
-        new Normalize(
-          Array(
-            0.485f,
-            0.456f,
-            0.406f
-          ),
-          Array(
-            0.229f,
-            0.224f,
-            0.225f
+  private def buildTranslator[F[_]: Sync](synsetUrl: String): F[Translator[Image, Classifications]] =
+    Sync[F].delay {
+      // copypasted from here https://github.com/deepjavalibrary/djl/issues/1419
+      ImageClassificationTranslator
+        .builder()
+        .optSynsetUrl(synsetUrl)
+        .addTransform(new Resize(256))
+        // from the model description it was trained on 224x224 images so looks like it fits
+        .addTransform(new CenterCrop(224, 224))
+        .addTransform(new ToTensor())
+        .addTransform(
+          new Normalize(
+            Array(
+              0.485f,
+              0.456f,
+              0.406f
+            ),
+            Array(
+              0.229f,
+              0.224f,
+              0.225f
+            )
           )
         )
-      )
-      .optApplySoftmax(true)
-      .build()
-  }
+        .optApplySoftmax(true)
+        .build()
+    }
 
-  private def acquireModelPredictor[F[_]: Sync](modelPath: String, synsetPath: String) =
+  private def acquireModelPredictor[F[_]: Sync: Logger](modelPath: String, synsetPath: String) =
     Resource.make {
       for {
-        translator <- buildTranslator(synsetPath)
+        lookup    <- Sync[F].delay(Files.list(Paths.get("./")).toList)
+        _         <- Logger[F].info(s"Workdir absolute path: ${Paths.get("./").toAbsolutePath.toString}")
+        _         <- Logger[F].info(s"Lookup result: $lookup")
+        synsetUrl <- Sync[F].delay("file://" + Paths.get(synsetPath).toAbsolutePath.toString)
+        _         <- Logger[F].info(s"Synset constructed url: $synsetUrl")
+
+        translator <- buildTranslator(synsetUrl)
         criteria   <- Sync[F].delay {
                         Criteria
                           .builder()
@@ -77,8 +84,8 @@ object NsfwDetection {
 
   def of[F[_]: Sync: LoggerFactory](modelPath: String, synsetPath: String): Resource[F, NsfwDetection[F]] =
     for {
-      logger         <- Resource.eval(LoggerFactory[F].create)
-      (_, predictor) <- acquireModelPredictor[F](modelPath, synsetPath)
+      implicit0(logger: Logger[F]) <- Resource.eval(LoggerFactory[F].create)
+      (_, predictor)               <- acquireModelPredictor[F](modelPath, synsetPath)
     } yield new NsfwDetection[F] {
 
       override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Option[(Category, Score)]] =

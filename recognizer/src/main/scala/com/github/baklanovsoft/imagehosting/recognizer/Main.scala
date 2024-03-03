@@ -32,7 +32,7 @@ object Main extends IOApp with KafkaJsonDeserializer {
     resources = for {
                   detection      <- if (config.debugCategories) ObjectDetection.debug[IO](minioClient)
                                     else ObjectDetection.production[IO]
-                  nsfw           <- NsfwDetection.of[IO](config.nsfwModelPath, config.nsfwSynset)
+                  nsfw           <- NsfwDetection.of[IO](config.nsfwModelPath, config.nsfwSynsetPath)
                   categorization <- Resource.eval(
                                       CategorizationStream
                                         .of[IO](

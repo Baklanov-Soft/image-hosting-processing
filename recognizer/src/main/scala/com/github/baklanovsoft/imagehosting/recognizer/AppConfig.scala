@@ -9,7 +9,7 @@ final case class AppConfig(
     newImagesTopic: String,
     categoriesTopic: String,
     debugCategories: Boolean,
-    nsfwSynset: String,
+    nsfwSynsetPath: String,
     nsfwModelPath: String,
     minio: MinioCreds
 )
