@@ -3,6 +3,12 @@ name: publish resizer
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'resizer/**'
+      - 'domain/**'
+      - 'common/**'
+      - 'project/**'
+      - 'build.sbt'
 
 env:
   IMAGE_NAME: image-hosting-processing-resizer

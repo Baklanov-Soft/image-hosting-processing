@@ -32,8 +32,8 @@ class ResizeJob[F[_]: Sync] {
     }(listOfStreams => Sync[F].delay(listOfStreams.map(t => t._1 -> t._2._2))) { listOfStreams =>
       Sync[F].delay {
         listOfStreams.foreach { case (_, (out, in)) =>
-          out.close()
           in.close()
+          out.close()
         }
         originalImage.close()
       }

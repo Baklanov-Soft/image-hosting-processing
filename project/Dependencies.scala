@@ -9,12 +9,12 @@ object Dependencies {
     val catsEffect = "3.5.3"
     val circe      = "0.14.6"
 
+    val djl = "0.26.0"
+
     val enumeratum = "1.7.3"
 
     val fs2      = "3.9.4"
-    val fs2Kafka = "3.2.0"
-
-    val http4s = "0.23.25"
+    val fs2Kafka = "3.3.1"
 
     val logback  = "1.4.14"
     val log4cats = "2.6.0"
@@ -24,8 +24,6 @@ object Dependencies {
     val newtype = "0.4.4"
 
     val pureconfig = "0.17.5"
-
-    val tapir = "1.9.8"
 
     val imgscalr = "4.2"
 
@@ -47,13 +45,20 @@ object Dependencies {
   val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
 
   val codecs = Seq(
-    "io.circe"                    %% "circe-core"       % Versions.circe,
-    "io.circe"                    %% "circe-generic"    % Versions.circe,
-    "io.circe"                    %% "circe-parser"     % Versions.circe,
-    "com.beachape"                %% "enumeratum-circe" % Versions.enumeratum,
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-newtype"    % Versions.tapir
+    "io.circe"     %% "circe-core"       % Versions.circe,
+    "io.circe"     %% "circe-generic"    % Versions.circe,
+    "io.circe"     %% "circe-parser"     % Versions.circe,
+    "com.beachape" %% "enumeratum-circe" % Versions.enumeratum
+  )
+
+  val djl = Seq(
+    "ai.djl"         % "api"               % Versions.djl,
+    // mxnet is used in object detection for embedded vgg16
+    "ai.djl.mxnet"   % "mxnet-model-zoo"   % Versions.djl,
+    "ai.djl.mxnet"   % "mxnet-engine"      % Versions.djl,
+    // pytorch for nsfw detection
+    "ai.djl.pytorch" % "pytorch-engine"    % Versions.djl,
+    "ai.djl.pytorch" % "pytorch-model-zoo" % Versions.djl
   )
 
   val enumeratum = "com.beachape" %% "enumeratum" % Versions.enumeratum
@@ -64,12 +69,6 @@ object Dependencies {
   )
 
   val fs2Kafka = "com.github.fd4s" %% "fs2-kafka" % Versions.fs2Kafka
-
-  val http4s = Seq(
-    "org.http4s" %% "http4s-core"         % Versions.http4s,
-    "org.http4s" %% "http4s-server"       % Versions.http4s,
-    "org.http4s" %% "http4s-ember-server" % Versions.http4s
-  )
 
   val logging = Seq(
     "ch.qos.logback" % "logback-classic" % Versions.logback,
@@ -86,12 +85,6 @@ object Dependencies {
     "com.github.pureconfig" %% "pureconfig-core"        % Versions.pureconfig,
     "com.github.pureconfig" %% "pureconfig-generic"     % Versions.pureconfig,
     "com.github.pureconfig" %% "pureconfig-cats-effect" % Versions.pureconfig
-  )
-
-  val tapir = Seq(
-    "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"  % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui"    % Versions.tapir,
-    "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % Versions.tapir
   )
 
   val imgscalr = "org.imgscalr" % "imgscalr-lib" % Versions.imgscalr

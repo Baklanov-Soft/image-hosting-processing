@@ -19,7 +19,7 @@ trait KafkaJsonDeserializer {
       decodeByteArray[T](bytes) match {
         case Left(value)  =>
           KafkaJsonDecodingError(
-            s"Can't decode json kafka message: ${value.getMessage}. Original message: ${bytes}"
+            s"Can't decode json kafka message: ${value.getMessage}. Original message: $bytes"
           )
             .raiseError[F, T]
         case Right(value) => value.pure[F]

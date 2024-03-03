@@ -19,6 +19,7 @@ trait MinioClient[F[_]] {
       folder: Option[String] = None
   ): F[Unit]
 
+  // todo ensure streams are closed
   def getObject(bucketId: BucketId, objectName: String, folder: Option[String] = None): F[InputStream]
 }
 
