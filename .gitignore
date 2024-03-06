@@ -2,6 +2,7 @@ params.conf
 .idea
 .bsp
 converted-to-torchscript.pt
+nsfw_model.pt
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

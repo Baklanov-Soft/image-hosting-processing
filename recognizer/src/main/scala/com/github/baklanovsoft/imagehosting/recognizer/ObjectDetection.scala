@@ -1,14 +1,13 @@
 package com.github.baklanovsoft.imagehosting.recognizer
 
-import cats.implicits._
 import ai.djl.Application
 import ai.djl.engine.Engine
 import ai.djl.inference.Predictor
 import ai.djl.modality.cv.Image
 import ai.djl.modality.cv.output.DetectedObjects
 import ai.djl.repository.zoo.{Criteria, ZooModel}
-import ai.djl.training.util.ProgressBar
 import cats.effect.kernel.{Resource, Sync}
+import cats.implicits._
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
 import com.github.baklanovsoft.imagehosting.{BucketId, Category, ImageId, Score}
 import org.typelevel.log4cats.LoggerFactory
@@ -50,7 +49,7 @@ object ObjectDetection {
   private def acquireModelPredictor[F[_]: Sync]
       : Resource[F, (ZooModel[Image, DetectedObjects], Predictor[Image, DetectedObjects])] =
     Resource.make {
-      val useEngine = Engines.MxNet
+      val useEngine = Engines.PyTorch
 
       for {
         criteria <- Sync[F].delay(
@@ -58,8 +57,7 @@ object ObjectDetection {
                         .optApplication(Application.CV.OBJECT_DETECTION)
                         .setTypes(classOf[Image], classOf[DetectedObjects])
                         .optEngine(Engine.getEngine(useEngine.name).getEngineName)
-                        .optFilter("backbone", useEngine.Models.vgg16)
-                        .optProgress(new ProgressBar)
+                        .optFilter("backbone", useEngine.Models.resnet50)
                         .build
                     )
 

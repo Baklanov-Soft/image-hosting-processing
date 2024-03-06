@@ -2,6 +2,8 @@
 
 Support part of https://github.com/Baklanov-Soft/image-hosting-storage
 
+See docker-compose for settings example.
+
 ## Resizer
 
 Resizer service for generating the previews. Docker Compose contains 2 instances by default (=partitions amount of
@@ -10,10 +12,10 @@ new images topic).
 Environment variables:
 
 ```
-KAFKA_BOOTSTRAP_SERVERS - kafka cluster url (Default: localhost:9092)
-CONSUMER_GROUP_ID - consumer id, multiple instances with same id will allow horizontal scaling (depends on topic paritions) (Default: resizer-local-test)
-NEW_IMAGES_TOPIC - topic for notifications about new images (Default: "new-images.v1")
-MINIO_HOST - host of minio from where it will take pictures and where it is going to upload the previews
+KAFKA_BOOTSTRAP_SERVERS - kafka cluster url
+CONSUMER_GROUP_ID - consumer id, multiple instances with same id will allow horizontal scaling (depends on topic paritions) 
+NEW_IMAGES_TOPIC - topic for notifications about new images
+MINIO_HOST - minio from where it will take pictures and where it is going to upload the previews
 MINIO_USER
 MINIO_PASSWORD
 ```
@@ -36,24 +38,29 @@ It creates multiple preview images inside the same Minio as it reads from (insid
 Service for object detection and nsfw content detection.
 
 NSFW detection based on model: https://huggingface.co/Falconsai/nsfw_image_detection
+Currently NSFW detection only works on porn images. It doesn't recognize blood or any other stuff.
 
 Converted to DJL TorchScript model (required for service to
-work): https://huggingface.co/DenisNovac/nsfw_image_detection/tree/main
+work, you will need to mount it to docker (see docker-compose for
+reference)): https://huggingface.co/DenisNovac/nsfw_image_detection/tree/main
 
 Environment variables:
 
 ```
-KAFKA_BOOTSTRAP_SERVERS - kafka cluster url (Default: localhost:9092)
-CONSUMER_GROUP_ID - consumer id, multiple instances with same id will allow horizontal scaling (depends on topic paritions) (Default: recognizer-local-test)
-NEW_IMAGES_TOPIC - topic for notifications about new images (Default: "new-images.v1")
-CATEGORIES_TOPIC - topic for output of service (Default: "categories.v1")
+KAFKA_BOOTSTRAP_SERVERS - kafka cluster url
+CONSUMER_GROUP_ID - consumer id, multiple instances with same id will allow horizontal scaling (depends on topic paritions) 
+NEW_IMAGES_TOPIC - topic for notifications about new images 
+CATEGORIES_TOPIC - topic for output of service 
 DEBUG_CATEGORIES - write debug object detection pictures (draw squares around detected objects) into debug folder (HEAVY PNG)
-NSFW_SYNSET - synset.txt file for nsfw detector (list of categories, included in project)
+NSFW_SYNSET_PATH - synset.txt file for nsfw detector (list of categories, included in project)
 NSFW_MODEL_PATH - pre-trained model for nsfw detection, requires one specific model, others could be working wrong
-MINIO_HOST - host of minio from where it will take pictures
+ENABLE_NSFW_DETECTION - allows to disable nsfw detection completely (and skip it's init)
+MINIO_HOST - minio from where it will take (and save debug) pictures
 MINIO_USER
 MINIO_PASSWORD
 ```
+
+**NOTE:** nsfw model and synset must be in subfolder such as /nsfw (see docker-compose for reference).
 
 ### Protocol
 
