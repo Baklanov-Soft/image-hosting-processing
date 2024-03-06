@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - 'resizer/**'
+      - 'recognizer/**'
       - 'domain/**'
       - 'common/**'
       - 'project/**'
@@ -12,7 +12,7 @@ on:
       - '.github/**'
 
 env:
-  IMAGE_NAME: image-hosting-processing-resizer
+  IMAGE_NAME: image-hosting-processing-recognizer
 
 jobs:
   publish-container:
@@ -40,10 +40,10 @@ jobs:
       #  run: sbt it:test
 
       - name: Assembly
-        run: sbt buildResizer
+        run: sbt buildRecognizer
 
       - name: Build image
-        run: docker build ./resizer --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+        run: docker build ./recognizer --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
       - name: Push image
         run: |
