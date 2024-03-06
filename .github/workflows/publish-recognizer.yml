@@ -1,4 +1,4 @@
-name: publish resizer
+name: publish recognizer
 
 on:
   push:
