@@ -50,14 +50,17 @@ services:
       - kafka-init-categories
     volumes:
       - recognizer1-djl-cache:/root/.djl.ai
+      - "./recognizer/synset.txt:/opt/app/nsfw/synset.txt"
+      # download it from here https://huggingface.co/DenisNovac/nsfw_image_detection/
+      - "./recognizer/nsfw_model.pt:/opt/app/nsfw/nsfw_model.pt"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CONSUMER_GROUP_ID: recognizer-local-test
       NEW_IMAGES_TOPIC: "new-images.v1"
       CATEGORIES_TOPIC: "categories.v1"
-      ENABLE_NSFW_DETECTION: false # nsfw detection doesn't work from docker atm
-      NSFW_SYNSET_PATH: "synset.txt"
-      NSFW_MODEL_PATH: "nsfw_model.pt"
+      ENABLE_NSFW_DETECTION: true # nsfw detection doesn't work from docker atm
+      NSFW_SYNSET_PATH: "nsfw/synset.txt"
+      NSFW_MODEL_PATH: "nsfw/nsfw_model.pt"
       MINIO_HOST: "http://minio:9000"
       MINIO_USER: minioadmin
       MINIO_PASSWORD: minioadmin
