@@ -7,6 +7,7 @@ import ai.djl.modality.cv.transform.{CenterCrop, Normalize, Resize, ToTensor}
 import ai.djl.modality.cv.translator.ImageClassificationTranslator
 import ai.djl.repository.zoo.Criteria
 import ai.djl.translate.Translator
+import cats.Monad
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.{BucketId, Category, ImageId, Score}
@@ -23,6 +24,11 @@ trait NsfwDetection[F[_]] {
 }
 
 object NsfwDetection {
+
+  def dummy[F[_]: Monad]: NsfwDetection[F] = new NsfwDetection[F] {
+    override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Option[(Category, Score)]] =
+      Monad[F].pure(None)
+  }
 
   private def buildTranslator[F[_]: Sync](synsetUrl: String): F[Translator[Image, Classifications]] =
     Sync[F].delay {
@@ -55,7 +61,7 @@ object NsfwDetection {
   private def acquireModelPredictor[F[_]: Sync: Logger](modelPath: String, synsetPath: String) =
     Resource.make {
       for {
-        lookup    <- Sync[F].delay(Files.list(Paths.get("./")).toList)
+        lookup    <- Sync[F].delay(Files.list(Paths.get("./")).toArray.toList)
         _         <- Logger[F].info(s"Workdir absolute path: ${Paths.get("./").toAbsolutePath.toString}")
         _         <- Logger[F].info(s"Lookup result: $lookup")
         synsetUrl <- Sync[F].delay("file://" + Paths.get(synsetPath).toAbsolutePath.toString)
@@ -77,7 +83,8 @@ object NsfwDetection {
                           .build()
                       }
 
-        model     <- Sync[F].delay(criteria.loadModel())
+        model <- Sync[F].delay(criteria.loadModel())
+
         predictor <- Sync[F].delay(model.newPredictor())
       } yield (model, predictor)
     } { case (model, predictor) => Sync[F].delay(predictor.close()) >> Sync[F].delay(model.close()) }

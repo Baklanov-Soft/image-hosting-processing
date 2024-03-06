@@ -1,5 +1,6 @@
 package com.github.baklanovsoft.imagehosting.recognizer
 
+import cats.syntax.applicative._
 import cats.effect._
 import com.github.baklanovsoft.imagehosting.NewImage
 import com.github.baklanovsoft.imagehosting.kafka.{KafkaConsumer, KafkaJsonDeserializer}
@@ -30,9 +31,18 @@ object Main extends IOApp with KafkaJsonDeserializer {
                     )
 
     resources = for {
-                  detection      <- if (config.debugCategories) ObjectDetection.debug[IO](minioClient)
-                                    else ObjectDetection.production[IO]
-                  nsfw           <- NsfwDetection.of[IO](config.nsfwModelPath, config.nsfwSynsetPath)
+                  detection <- if (config.debugCategories) ObjectDetection.debug[IO](minioClient)
+                               else ObjectDetection.production[IO]
+
+                  nsfw <- {
+                    if (config.enableNsfwDetection) NsfwDetection.of[IO](config.nsfwModelPath, config.nsfwSynsetPath)
+                    else
+                      Resource.eval {
+                        logger.warn("NSFW Detection is disabled") *>
+                          NsfwDetection.dummy[IO].pure[IO]
+                      }
+                  }
+
                   categorization <- Resource.eval(
                                       CategorizationStream
                                         .of[IO](
