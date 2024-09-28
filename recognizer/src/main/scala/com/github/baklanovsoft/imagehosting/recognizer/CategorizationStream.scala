@@ -27,11 +27,11 @@ class CategorizationStream[F[_]: Async: Logger](
   private val imageFactory = ImageFactory.getInstance()
 
   private def processRecord(record: NewImage) = for {
-    is         <- minioClient.getObject(record.bucketId, record.imageId.value.toString)
+    is         <- minioClient.getObject(record.bucket, record.image.value.toString)
     image      <- Async[F].delay(imageFactory.fromInputStream(is))
-    categories <- detection.detect(image, record.bucketId, record.imageId)
-    nsfw0      <- nsfw.detect(image, record.bucketId, record.imageId)
-  } yield Categories(bucketId = record.bucketId, imageId = record.imageId, categories = categories ++ nsfw0)
+    categories <- detection.detect(image, record.bucket, record.image)
+    nsfw0      <- nsfw.detect(image, record.bucket, record.image)
+  } yield Categories(bucketId = record.bucket, imageId = record.image, categories = categories ++ nsfw0)
 
   /** Transactional fs2kafka stream
     */
