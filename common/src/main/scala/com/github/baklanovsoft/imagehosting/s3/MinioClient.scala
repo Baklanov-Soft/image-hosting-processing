@@ -8,9 +8,6 @@ import io.minio.{GetObjectArgs, MakeBucketArgs, MinioClient => MinioClientJava, 
 import java.io.InputStream
 
 trait MinioClient[F[_]] {
-  def makeBucket(bucketId: BucketId): F[Unit]
-  def dropBucket(bucketId: BucketId): F[Unit]
-
   def putImage(
       imageMeta: ImageMeta,
       stream: InputStream,
@@ -19,6 +16,10 @@ trait MinioClient[F[_]] {
 
   // todo ensure streams are closed
   def getImage(imageMeta: ImageMeta): F[InputStream]
+
+  // those are not really used since storage app manages the buckets
+  def makeBucket(bucketId: BucketId): F[Unit]
+  def dropBucket(bucketId: BucketId): F[Unit]
 }
 
 object MinioClient {
@@ -31,11 +32,6 @@ object MinioClient {
           .endpoint(host)
           .credentials(username, password)
           .build()
-
-      override def makeBucket(bucketId: BucketId): F[Unit] =
-        Sync[F].delay {
-          client.makeBucket(MakeBucketArgs.builder().bucket(bucketId.value.toString).build())
-        }
 
       override def putImage(
           imageMeta: ImageMeta,
@@ -71,6 +67,11 @@ object MinioClient {
               )
 
           inputStream
+        }
+
+      override def makeBucket(bucketId: BucketId): F[Unit] =
+        Sync[F].delay {
+          client.makeBucket(MakeBucketArgs.builder().bucket(bucketId.value.toString).build())
         }
 
       override def dropBucket(bucketId: BucketId): F[Unit] =
