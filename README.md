@@ -1,12 +1,26 @@
-# Image hosting processing
+# Image Hosting Processing
 
-Support part of https://github.com/Baklanov-Soft/image-hosting-storage
+Processing part of Image hosting, see storage part here: https://github.com/Baklanov-Soft/image-hosting-storage
 
-See docker-compose for settings example.
+![alt text](service-diagram.jpg)
+
+Image Hosting is separated into two main parts and multiple microservices communicating via Kafka and shared S3:
+
+- storage (https://github.com/Baklanov-Soft/image-hosting-storage):
+    - web API - user API for pictures uploading and managing;
+    - tagger - preloader for processing output of recognizer;
+- processing (this repo):
+    - resizer - creates small previews for uploaded images;
+    - recognizer:
+        - does automatic object recognition for generating image tags;
+        - optional nsfw detection (will add nsfw tag to standard response).
+
+Processing part is stateless and fully scalable via Kafka consumer groups.
+See docker-compose for whole project setup with processing cluster.
 
 ## Resizer
 
-Resizer service for generating the previews. Docker Compose contains 2 instances by default (=partitions amount of
+Resizer service for generating the previews. Compose file contains 2 instances by default (=partitions amount of
 new images topic).
 
 Environment variables:
@@ -52,7 +66,7 @@ KAFKA_BOOTSTRAP_SERVERS - kafka cluster url
 CONSUMER_GROUP_ID - consumer id, multiple instances with same id will allow horizontal scaling (depends on topic paritions) 
 NEW_IMAGES_TOPIC - topic for notifications about new images 
 CATEGORIES_TOPIC - topic for output of service 
-DEBUG_CATEGORIES - write debug object detection pictures (draw squares around detected objects) into debug folder (HEAVY PNG)
+DEBUG_CATEGORIES - write debug object detection pictures (draw squares around detected objects) into S3
 NSFW_SYNSET_PATH - synset.txt file for nsfw detector (list of categories, included in project)
 NSFW_MODEL_PATH - pre-trained model for nsfw detection, requires one specific model, others could be working wrong
 ENABLE_NSFW_DETECTION - allows to disable nsfw detection completely (and skip it's init)
@@ -61,7 +75,9 @@ MINIO_USER
 MINIO_PASSWORD
 ```
 
-**NOTE:** nsfw model and synset must be in subfolder such as /nsfw (see docker-compose for reference).
+**NOTE:** nsfw model and synset must be in subfolder such as /nsfw (see docker-compose for reference)
+
+**NOTE 2:** debug images are heavy png (and might be much heavier than original image)
 
 ### Protocol
 
