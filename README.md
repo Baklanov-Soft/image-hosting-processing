@@ -26,12 +26,13 @@ Resizer reads `{NEW_IMAGES_TOPIC}` Kafka topic and accepts messages in following
 
 ```json
 {
-  "bucketId": "00000000-0000-0000-0000-000000000000",
-  "imageId": "a10a119a-bbc1-4980-9c23-ac28da4fe773"
+  "bucket": "00000000-0000-0000-0000-000000000000",
+  "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
+  "image": "original.jpg"
 }
 ```
 
-It creates multiple preview images inside the same Minio as it reads from (inside subfolders in buckets).
+It creates multiple preview images inside the same Minio as it reads from.
 
 ## Recognizer
 
@@ -68,8 +69,9 @@ Recognizer reads `{NEW_IMAGES_TOPIC}` Kafka topic and accepts messages in follow
 
 ```json
 {
-  "bucketId": "00000000-0000-0000-0000-000000000000",
-  "imageId": "a10a119a-bbc1-4980-9c23-ac28da4fe773"
+  "bucket": "00000000-0000-0000-0000-000000000000",
+  "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
+  "image": "original.jpg"
 }
 ```
 
@@ -77,11 +79,14 @@ Recognizer writes output to `{CATEGORIES_TOPIC}` Kafka topic in following format
 
 ```json
 {
-  "bucketId": "00000000-0000-0000-0000-000000000000",
-  "imageId": "9c2b08f3-66ae-4cba-b0f7-857fc96eb6b3",
+  "image": {
+    "bucket": "00000000-0000-0000-0000-000000000000",
+    "prefix": "d082dd66-5723-4ca3-8401-f78410ecf32e",
+    "name": "original.jpg"
+  },
   "categories": {
     "nsfw": 0.9998799562454224,
-    "person": 0.7969253063201904
+    "person": 0.9533286094665527
   }
 }
 ```
