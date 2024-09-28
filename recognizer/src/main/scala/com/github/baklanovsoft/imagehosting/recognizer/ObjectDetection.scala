@@ -24,21 +24,8 @@ trait ObjectDetection[F[_]] {
 object ObjectDetection {
 
   private object Engines {
-
-    // mx net has a lot of included models so it's better to use in detection
-    object MxNet {
-      val name = "MXNet"
-
-      object Models {
-        val darknet53 = "darknet53"
-        val mobileNet = "mobilenet1.0"
-        val resnet50  = "resnet50"
-        val vgg16     = "vgg16"
-      }
-    }
-
     object PyTorch {
-      val name = "MXNet"
+      val name = "PyTorch"
 
       object Models {
         val resnet50 = "resnet50"

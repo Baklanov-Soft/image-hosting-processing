@@ -47,9 +47,6 @@ object Dependencies {
 
   val djl = Seq(
     "ai.djl"         % "api"               % Versions.djl,
-    // mxnet is used in object detection for embedded vgg16
-    "ai.djl.mxnet"   % "mxnet-model-zoo"   % Versions.djl,
-    "ai.djl.mxnet"   % "mxnet-engine"      % Versions.djl,
     // pytorch for nsfw detection
     "ai.djl.pytorch" % "pytorch-engine"    % Versions.djl,
     "ai.djl.pytorch" % "pytorch-model-zoo" % Versions.djl
