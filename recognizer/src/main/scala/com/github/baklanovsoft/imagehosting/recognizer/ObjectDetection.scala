@@ -9,10 +9,11 @@ import ai.djl.repository.zoo.{Criteria, ZooModel}
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
+import com.github.baklanovsoft.imagehosting.util.JavaStreamWrapper
 import com.github.baklanovsoft.imagehosting.{Category, ImageMeta, ImageName, Score}
 import org.typelevel.log4cats.LoggerFactory
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import scala.jdk.CollectionConverters._
 
 trait ObjectDetection[F[_]] {
@@ -94,26 +95,18 @@ object ObjectDetection {
         // mutation on Image
         _          <- Sync[F].delay(cloneImage.drawBoundingBoxes(detectedObjects))
 
-        _ <- Sync[F].bracket {
-               Sync[F].delay {
-                 // saving to output stream but piping to input stream
-                 val out             = new ByteArrayOutputStream()
-                 cloneImage.save(out, "png")
-                 val in: InputStream = new ByteArrayInputStream(out.toByteArray)
-                 (out, in)
-               }
-             } { case (_, in) =>
-               minioClient.putImage(
-                 imageMeta.rename(ImageName("debug")),
-                 stream = in,
-                 contentType = "image/png"
-               )
-             } { case (out, in) =>
-               Sync[F].delay {
-                 in.close()
-                 out.close()
-               }
-             }
+        out <- Sync[F].pure(new ByteArrayOutputStream())
+        _   <- Sync[F].delay(cloneImage.save(out, "png"))
+        in  <- Sync[F].delay(new ByteArrayInputStream(out.toByteArray))
+
+        imageToSave = JavaStreamWrapper.wrapSelfWriting(out, in)
+
+        _ <- minioClient.putImage(
+               imageMeta.rename(ImageName("debug")),
+               stream = imageToSave,
+               contentType = "image/png"
+             )
+
         _ <- logger.info(s"Saved debug for image $imageMeta")
       } yield ()
 

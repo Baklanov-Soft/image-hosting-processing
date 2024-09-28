@@ -1,7 +1,9 @@
 package com.github.baklanovsoft.imagehosting.s3
 
-import cats.effect.kernel.Sync
+import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
+import com.github.baklanovsoft.imagehosting.util.JavaStreamWrapper
+import com.github.baklanovsoft.imagehosting.util.JavaStreamWrapper.JavaStream
 import com.github.baklanovsoft.imagehosting.{BucketId, ImageMeta}
 import io.minio.{GetObjectArgs, MakeBucketArgs, MinioClient => MinioClientJava, PutObjectArgs, RemoveBucketArgs}
 
@@ -10,12 +12,11 @@ import java.io.InputStream
 trait MinioClient[F[_]] {
   def putImage(
       imageMeta: ImageMeta,
-      stream: InputStream,
+      stream: JavaStream[F],
       contentType: String
   ): F[Unit]
 
-  // todo ensure streams are closed
-  def getImage(imageMeta: ImageMeta): F[InputStream]
+  def getImage(imageMeta: ImageMeta): JavaStream[F]
 
   // those are not really used since storage app manages the buckets
   def makeBucket(bucketId: BucketId): F[Unit]
@@ -35,39 +36,46 @@ object MinioClient {
 
       override def putImage(
           imageMeta: ImageMeta,
-          stream: InputStream,
+          stream: JavaStream[F],
           contentType: String
       ): F[Unit] =
-        Sync[F].delay {
-          client
-            .putObject(
-              PutObjectArgs
-                .builder()
-                .bucket(imageMeta.bucket.value.toString)
-                .`object`(imageMeta.path)
-                .stream(stream, -1, 1024 * 1024 * 5)
-                .contentType(contentType)
-                .build()
-            )
-
-        }.void
-
-      override def getImage(
-          imageMeta: ImageMeta
-      ): F[InputStream] =
-        Sync[F].delay {
-          val inputStream: InputStream =
+        stream.use { inputStream =>
+          Sync[F].delay {
             client
-              .getObject(
-                GetObjectArgs
+              .putObject(
+                PutObjectArgs
                   .builder()
                   .bucket(imageMeta.bucket.value.toString)
                   .`object`(imageMeta.path)
+                  .stream(inputStream, -1, 1024 * 1024 * 5)
+                  .contentType(contentType)
                   .build()
               )
 
-          inputStream
+          }.void
         }
+
+      override def getImage(
+          imageMeta: ImageMeta
+      ): JavaStream[F] =
+        Resource
+          .eval(
+            Sync[F]
+              .delay {
+                val inputStream: InputStream =
+                  client
+                    .getObject(
+                      GetObjectArgs
+                        .builder()
+                        .bucket(imageMeta.bucket.value.toString)
+                        .`object`(imageMeta.path)
+                        .build()
+                    )
+
+                inputStream
+              }
+          )
+          .flatMap(inputStream => JavaStreamWrapper.wrap(inputStream))
 
       override def makeBucket(bucketId: BucketId): F[Unit] =
         Sync[F].delay {
