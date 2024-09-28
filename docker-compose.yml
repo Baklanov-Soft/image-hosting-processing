@@ -82,7 +82,7 @@ services:
 
   kafka:
     container_name: kafka
-    image: bitnami/kafka:3.6.1
+    image: bitnami/kafka:3.8
     ports:
       - "9094:9094"
     environment:
@@ -99,7 +99,7 @@ services:
 
   minio:
     container_name: minio
-    image: quay.io/minio/minio:RELEASE.2024-01-31T20-20-33Z
+    image: quay.io/minio/minio:RELEASE.2024-09-13T20-26-02Z
     command: server --console-address ":9001" /data
     ports:
       - "9000:9000"
@@ -112,7 +112,7 @@ services:
 
   postgres:
     container_name: postgres
-    image: postgres:16-alpine3.18
+    image: postgres:16.4-alpine3.20
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
@@ -130,7 +130,7 @@ services:
 
   image-hosting-storage:
     container_name: image-hosting-storage
-    image: ghcr.io/baklanov-soft/image-hosting-storage
+    image: ghcr.io/baklanov-soft/image-hosting-storage:master
     environment:
       Logging__LogLevel__Default: Information
       Logging__LogLevel__Microsoft.AspNetCore: Warning
@@ -155,7 +155,7 @@ services:
 
   kafka-init-new-images:
     container_name: kafka-init-new-images
-    image: bitnami/kafka:3.6.1
+    image: bitnami/kafka:3.8
     depends_on:
       - kafka
     entrypoint: "kafka-topics.sh"
@@ -169,7 +169,7 @@ services:
 
   kafka-init-categories:
     container_name: kafka-init-categories
-    image: bitnami/kafka:3.6.1
+    image: bitnami/kafka:3.8
     depends_on:
       - kafka
     entrypoint: "kafka-topics.sh"
