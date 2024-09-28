@@ -128,23 +128,18 @@ services:
       retries: 3
     command: [ "postgres", "-c", "log_statement=all" ]
 
-  image-hosting-storage:
-    container_name: image-hosting-storage
-    image: ghcr.io/baklanov-soft/image-hosting-storage:master
+  image-hosting-webapi:
+    container_name: image-hosting-webapi
+    image: image-hosting-storage-webapi
     environment:
-      Logging__LogLevel__Default: Information
-      Logging__LogLevel__Microsoft.AspNetCore: Warning
-      Logging__LogLevel__Microsoft.EntityFrameworkCore: Warning
       Minio__Endpoint: minio:9000
       Minio__AccessKey: minioadmin
       Minio__SecretKey: minioadmin
       Minio__Secure: false
       ConnectionStrings__ImageHosting: "Host=postgres;Port=5432;Database=image_hosting;Username=image_hosting;Password=P@ssw0rd;Include Error Detail=true"
       ASPNETCORE_ENVIRONMENT: Development
-      Kafka__Producer__BootstrapServers: kafka:9092
-      Kafka__Producer__ClientId: image-hosting-storage
-      Kafka__Producer__CompressionType: gzip
-      Kafka__NewImageTopic: new-images.v1
+      Kafka__BootstrapServers__0: kafka:9092
+      Kafka__NewImagesProducer__TopicName: new-images.v1
     ports:
       - "8080:8080"
     depends_on:
