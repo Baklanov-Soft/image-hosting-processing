@@ -30,8 +30,9 @@ class ResizingStream[F[_]: Sync: Logger] private (
             for {
               _ <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
 
-              s3Image        = msg.transformInto[ImageMeta]
-              originalImage <- minioClient.getImage(s3Image)
+              s3Image = msg.transformInto[ImageMeta]
+
+              originalImage = minioClient.getImage(s3Image)
 
               _ <- resizer
                      .resize(originalImage)
