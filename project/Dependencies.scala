@@ -7,7 +7,7 @@ object Dependencies {
     val catsEffect = "3.5.4"
     val circe      = "0.14.10"
 
-    val djl = "0.26.0"
+    val djl = "0.30.0"
 
     val enumeratum = "1.7.4"
 
@@ -17,7 +17,7 @@ object Dependencies {
     val logback  = "1.5.8"
     val log4cats = "2.7.0"
 
-    val minioClient = "8.5.7"
+    val minioClient = "8.5.12"
 
     val newtype = "0.4.4"
 
