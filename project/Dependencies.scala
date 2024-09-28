@@ -3,43 +3,37 @@ import sbt.*
 object Dependencies {
 
   private object Versions {
-    val apispec = "0.7.4"
+    val cats       = "2.12.0"
+    val catsEffect = "3.5.4"
+    val circe      = "0.14.10"
 
-    val cats       = "2.10.0"
-    val catsEffect = "3.5.3"
-    val circe      = "0.14.6"
+    val djl = "0.30.0"
 
-    val djl = "0.26.0"
+    val enumeratum = "1.7.4"
 
-    val enumeratum = "1.7.3"
+    val fs2      = "3.11.0"
+    val fs2Kafka = "3.5.1"
 
-    val fs2      = "3.9.4"
-    val fs2Kafka = "3.3.1"
+    val logback  = "1.5.8"
+    val log4cats = "2.7.0"
 
-    val logback  = "1.4.14"
-    val log4cats = "2.6.0"
-
-    val minioClient = "8.5.7"
+    val minioClient = "8.5.12"
 
     val newtype = "0.4.4"
 
-    val pureconfig = "0.17.5"
+    val pureconfig = "0.17.7"
 
     val imgscalr = "4.2"
 
     /* testing */
 
-    val scalatest = "3.2.17"
-    val weaver    = "0.8.4"
-
+    val scalatest = "3.2.19"
   }
 
   val plugins = Seq(
     ("org.typelevel" %% "kind-projector"     % "0.13.2").cross(CrossVersion.full),
     "com.olegpy"     %% "better-monadic-for" % "0.3.1"
   ).map(compilerPlugin)
-
-  val apispec = "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml" % Versions.apispec
 
   val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
   val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
@@ -53,9 +47,6 @@ object Dependencies {
 
   val djl = Seq(
     "ai.djl"         % "api"               % Versions.djl,
-    // mxnet is used in object detection for embedded vgg16
-    "ai.djl.mxnet"   % "mxnet-model-zoo"   % Versions.djl,
-    "ai.djl.mxnet"   % "mxnet-engine"      % Versions.djl,
     // pytorch for nsfw detection
     "ai.djl.pytorch" % "pytorch-engine"    % Versions.djl,
     "ai.djl.pytorch" % "pytorch-model-zoo" % Versions.djl
@@ -91,11 +82,6 @@ object Dependencies {
 
   object Testing {
     val scalatest = "org.scalatest" %% "scalatest" % Versions.scalatest % Test
-
-    val weaver = Seq(
-      "com.disneystreaming" %% "weaver-core" % Versions.weaver % Test,
-      "com.disneystreaming" %% "weaver-cats" % Versions.weaver % Test
-    )
   }
 
 }
