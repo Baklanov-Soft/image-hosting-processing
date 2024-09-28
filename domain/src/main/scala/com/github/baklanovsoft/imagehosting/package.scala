@@ -9,7 +9,7 @@ package object imagehosting {
 
   @newtype final case class Prefix(value: UUID)
 
-  @newtype final case class ImageId(value: UUID)
+  @newtype final case class ImageName(value: String)
 
   @newtype final case class Category(value: String)
 

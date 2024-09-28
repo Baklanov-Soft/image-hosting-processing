@@ -3,11 +3,12 @@ package com.github.baklanovsoft.imagehosting.resizer
 import cats.effect.Temporal
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
-import com.github.baklanovsoft.imagehosting.NewImage
+import com.github.baklanovsoft.imagehosting.{ImageMeta, ImageName, NewImage}
 import com.github.baklanovsoft.imagehosting.kafka.KafkaConsumer
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
 import fs2.kafka.commitBatchWithin
 import org.typelevel.log4cats.{Logger, LoggerFactory}
+import io.scalaland.chimney.dsl._
 
 import scala.concurrent.duration._
 
@@ -27,20 +28,23 @@ class ResizingStream[F[_]: Sync: Logger] private (
 
           {
             for {
-              _             <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
-              originalImage <- minioClient.getObject(msg.bucket, msg.image.value.toString)
+              _ <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
+
+              s3Image        = msg.transformInto[ImageMeta]
+              originalImage <- minioClient.getImage(s3Image)
 
               _ <- resizer
                      .resize(originalImage)
                      .flatMap(listOfPreviews =>
                        listOfPreviews.traverse { case (size, stream) =>
-                         minioClient.putObject(
-                           msg.bucket,
-                           msg.image.value.toString,
+                         val resizedImage = s3Image.rename(ImageName(size.name))
+
+                         minioClient.putImage(
+                           resizedImage,
                            stream,
-                           contentType = "image/jpeg",
-                           folder = Some(size.folder)
+                           contentType = "image/jpeg"
                          )
+
                        } *> Logger[F].info(s"Resized image ${msg.image} with sizes ${listOfPreviews.map(_._1)}")
                      )
 

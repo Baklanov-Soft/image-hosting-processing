@@ -39,7 +39,8 @@ lazy val domain = (project in file("domain"))
   .settings(
     libraryDependencies ++= Seq(
       newtype,
-      enumeratum
+      enumeratum,
+      chimney
     ) ++ codecs
   )
   .settings(
@@ -71,8 +72,7 @@ lazy val resizer = (project in file("resizer"))
   )
   .settings(
     libraryDependencies ++= Seq(
-      imgscalr,
-      chimney
+      imgscalr
     ) ++ Seq(
       pureconfig,
       logging
@@ -91,8 +91,6 @@ lazy val recognizer = (project in file("recognizer"))
   )
   .settings(
     libraryDependencies ++= Seq(
-      chimney
-    ) ++ Seq(
       djl,
       pureconfig,
       logging

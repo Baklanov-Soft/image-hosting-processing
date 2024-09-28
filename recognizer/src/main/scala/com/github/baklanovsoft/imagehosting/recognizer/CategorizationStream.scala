@@ -4,13 +4,14 @@ import ai.djl.modality.cv.ImageFactory
 import cats.effect.Temporal
 import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
-import com.github.baklanovsoft.imagehosting.{Categories, NewImage}
+import com.github.baklanovsoft.imagehosting.{Categories, ImageMeta, NewImage}
 import com.github.baklanovsoft.imagehosting.kafka.{KafkaConsumer, KafkaJsonSerializer}
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
 import fs2.Stream
 import fs2.kafka._
 import org.apache.kafka.common.TopicPartition
 import org.typelevel.log4cats.{Logger, LoggerFactory}
+import io.scalaland.chimney.dsl._
 
 import scala.concurrent.duration._
 
@@ -26,12 +27,12 @@ class CategorizationStream[F[_]: Async: Logger](
 
   private val imageFactory = ImageFactory.getInstance()
 
-  private def processRecord(record: NewImage) = for {
-    is         <- minioClient.getObject(record.bucket, record.image.value.toString)
+  private def processRecord(imageMeta: ImageMeta) = for {
+    is         <- minioClient.getImage(imageMeta)
     image      <- Async[F].delay(imageFactory.fromInputStream(is))
-    categories <- detection.detect(image, record.bucket, record.image)
-    nsfw0      <- nsfw.detect(image, record.bucket, record.image)
-  } yield Categories(bucketId = record.bucket, imageId = record.image, categories = categories ++ nsfw0)
+    categories <- detection.detect(image, imageMeta)
+    nsfw0      <- nsfw.detect(image, imageMeta)
+  } yield Categories(imageMeta, categories = categories ++ nsfw0)
 
   /** Transactional fs2kafka stream
     */
@@ -63,8 +64,10 @@ class CategorizationStream[F[_]: Async: Logger](
                     val consumerOffset = commitable.offset
 
                     for {
-                      _          <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
-                      categories <- processRecord(msg)
+                      _ <- Logger[F].info(s"Kafka read [$p:$o] --- $msg")
+
+                      s3Image     = msg.transformInto[ImageMeta]
+                      categories <- processRecord(s3Image)
                       record      = ProducerRecord(categoriesTopic, (), categories)
                     } yield
                       if (categories.isEmpty) // don't send empty categories

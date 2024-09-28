@@ -16,8 +16,9 @@ class NewImageCodecSpec extends AnyFunSuite with Matchers with EitherValues {
         .parse(
           """
             |{
-            |    "bucketId": "95fb5f81-9280-4a8f-850f-2f3438bcfe24",
-            |    "imageId": "22c403e8-3093-485a-834f-542504601e88"
+            |    "bucket": "00000000-0000-0000-0000-000000000000",
+            |    "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
+            |    "image": "original.jpg"
             |}
             |""".stripMargin
         )
@@ -25,8 +26,9 @@ class NewImageCodecSpec extends AnyFunSuite with Matchers with EitherValues {
 
     val expected =
       NewImage(
-        BucketId(UUID.fromString("95fb5f81-9280-4a8f-850f-2f3438bcfe24")),
-        ImageId(UUID.fromString("22c403e8-3093-485a-834f-542504601e88"))
+        BucketId(UUID.fromString("00000000-0000-0000-0000-000000000000")),
+        Prefix(UUID.fromString("557b036f-c61f-40b6-ba13-4708519a566f")),
+        ImageName("original.jpg")
       )
 
     json.as[NewImage].value mustBe expected: Unit
