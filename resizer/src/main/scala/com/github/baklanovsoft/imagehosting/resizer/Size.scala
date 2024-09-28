@@ -2,7 +2,7 @@ package com.github.baklanovsoft.imagehosting.resizer
 
 import enumeratum.{Enum, EnumEntry}
 
-sealed abstract class Size(val size: Int, val folder: String) extends EnumEntry
+sealed abstract class Size(val size: Int, val name: String) extends EnumEntry
 
 /** Sizes to resize pictures with
   */

@@ -5,9 +5,12 @@ import io.circe.Codec
 import io.circe.generic.AutoDerivation
 import io.circe.generic.semiauto.deriveCodec
 
+/** New image upload notification received from kafka
+  */
 final case class NewImage(
-    bucketId: BucketId,
-    imageId: ImageId
+    bucket: BucketId,
+    prefix: Prefix,
+    image: ImageName
 )
 
 object NewImage extends NewtypeCodecs with AutoDerivation {

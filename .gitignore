@@ -3,6 +3,7 @@ params.conf
 .bsp
 converted-to-torchscript.pt
 nsfw_model.pt
+pics
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

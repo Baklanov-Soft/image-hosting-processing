@@ -9,16 +9,14 @@ import ai.djl.repository.zoo.{Criteria, ZooModel}
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.github.baklanovsoft.imagehosting.s3.MinioClient
-import com.github.baklanovsoft.imagehosting.{BucketId, Category, ImageId, Score}
+import com.github.baklanovsoft.imagehosting.{Category, ImageMeta, ImageName, Score}
 import org.typelevel.log4cats.LoggerFactory
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import scala.jdk.CollectionConverters._
 
 trait ObjectDetection[F[_]] {
-
-  def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Map[Category, Score]]
-
+  def detect(image: Image, imageMeta: ImageMeta): F[Map[Category, Score]]
 }
 
 object ObjectDetection {
@@ -70,11 +68,11 @@ object ObjectDetection {
     logger         <- Resource.eval(LoggerFactory[F].create)
     (_, predictor) <- acquireModelPredictor[F]
   } yield new ObjectDetection[F] {
-    override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Map[Category, Score]] =
+    override def detect(image: Image, imageMeta: ImageMeta): F[Map[Category, Score]] =
       for {
         detected  <- predict(predictor, image)
         categories = toCategories(detected)
-        _         <- logger.info(s"Detection result $bucketId:$imageId: $detected")
+        _         <- logger.info(s"Detection result $imageMeta: $detected")
       } yield categories
   }
 
@@ -89,8 +87,7 @@ object ObjectDetection {
       private def saveDebugImage(
           image: Image,
           detectedObjects: DetectedObjects,
-          bucketId: BucketId,
-          imageId: ImageId
+          imageMeta: ImageMeta
       ): F[Unit] = for {
         // don't touch initial image since it could be used in other places and it is mutable
         cloneImage <- Sync[F].delay(image.duplicate())
@@ -106,12 +103,10 @@ object ObjectDetection {
                  (out, in)
                }
              } { case (_, in) =>
-               minioClient.putObject(
-                 bucketId = bucketId,
-                 objectName = imageId.value.toString,
+               minioClient.putImage(
+                 imageMeta.rename(ImageName("debug")),
                  stream = in,
-                 contentType = "image/png",
-                 folder = Some("debug")
+                 contentType = "image/png"
                )
              } { case (out, in) =>
                Sync[F].delay {
@@ -119,15 +114,15 @@ object ObjectDetection {
                  out.close()
                }
              }
-        _ <- logger.info(s"Saved debug for image $bucketId:$imageId")
+        _ <- logger.info(s"Saved debug for image $imageMeta")
       } yield ()
 
-      override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Map[Category, Score]] =
+      override def detect(image: Image, imageMeta: ImageMeta): F[Map[Category, Score]] =
         for {
           detected  <- predict(predictor, image)
           categories = toCategories(detected)
-          _         <- logger.info(s"Detection result $bucketId:$imageId: $detected")
-          _         <- Sync[F].whenA(categories.nonEmpty)(saveDebugImage(image, detected, bucketId, imageId))
+          _         <- logger.info(s"Detection result $imageMeta: $detected")
+          _         <- Sync[F].whenA(categories.nonEmpty)(saveDebugImage(image, detected, imageMeta))
         } yield categories
     }
 

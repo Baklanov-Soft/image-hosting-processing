@@ -5,6 +5,7 @@ object Dependencies {
   private object Versions {
     val cats       = "2.12.0"
     val catsEffect = "3.5.4"
+    val chimney    = "1.4.0"
     val circe      = "0.14.10"
 
     val djl = "0.30.0"
@@ -37,6 +38,7 @@ object Dependencies {
 
   val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
   val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
+  val chimney    = "io.scalaland"  %% "chimney"     % Versions.chimney
 
   val codecs = Seq(
     "io.circe"     %% "circe-core"       % Versions.circe,

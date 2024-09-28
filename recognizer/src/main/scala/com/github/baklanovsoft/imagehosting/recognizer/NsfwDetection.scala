@@ -10,7 +10,7 @@ import ai.djl.translate.Translator
 import cats.Monad
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
-import com.github.baklanovsoft.imagehosting.{BucketId, Category, ImageId, Score}
+import com.github.baklanovsoft.imagehosting.{Category, ImageMeta, Score}
 import org.typelevel.log4cats.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Paths}
@@ -20,13 +20,13 @@ trait NsfwDetection[F[_]] {
 
   /** Will return nsfw category with score if nsfw detected
     */
-  def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Option[(Category, Score)]]
+  def detect(image: Image, imageMeta: ImageMeta): F[Option[(Category, Score)]]
 }
 
 object NsfwDetection {
 
   def dummy[F[_]: Monad]: NsfwDetection[F] = new NsfwDetection[F] {
-    override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Option[(Category, Score)]] =
+    override def detect(image: Image, imageMeta: ImageMeta): F[Option[(Category, Score)]] =
       Monad[F].pure(None)
   }
 
@@ -95,10 +95,10 @@ object NsfwDetection {
       (_, predictor)               <- acquireModelPredictor[F](modelPath, synsetPath)
     } yield new NsfwDetection[F] {
 
-      override def detect(image: Image, bucketId: BucketId, imageId: ImageId): F[Option[(Category, Score)]] =
+      override def detect(image: Image, imageMeta: ImageMeta): F[Option[(Category, Score)]] =
         for {
           detected <- Sync[F].delay(predictor.predict(image))
-          _        <- logger.info(s"NSFW detection result for image $bucketId:$imageId: $detected")
+          _        <- logger.info(s"NSFW detection result for image $imageMeta: $detected")
         } yield detected.getClassNames.asScala
           .zip(detected.getProbabilities.asScala)
           .toMap

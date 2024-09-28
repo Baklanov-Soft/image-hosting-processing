@@ -39,7 +39,8 @@ lazy val domain = (project in file("domain"))
   .settings(
     libraryDependencies ++= Seq(
       newtype,
-      enumeratum
+      enumeratum,
+      chimney
     ) ++ codecs
   )
   .settings(
@@ -70,7 +71,9 @@ lazy val resizer = (project in file("resizer"))
     assembly / mainClass := Some("com.github.baklanovsoft.imagehosting.resizer.Main")
   )
   .settings(
-    libraryDependencies ++= Seq(imgscalr) ++ Seq(
+    libraryDependencies ++= Seq(
+      imgscalr
+    ) ++ Seq(
       pureconfig,
       logging
     ).flatten
