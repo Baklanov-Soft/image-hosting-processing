@@ -6,7 +6,9 @@ import io.circe.generic.AutoDerivation
 import io.circe.generic.semiauto.deriveCodec
 
 final case class Categories(
-    image: ImageMeta,
+    bucket: BucketId,
+    prefix: Prefix,
+    name: ImageName,
     categories: Map[Category, Score]
 ) {
   def isEmpty: Boolean = categories.isEmpty

@@ -10,7 +10,7 @@ import io.circe.generic.semiauto.deriveCodec
 final case class NewImage(
     bucket: BucketId,
     prefix: Prefix,
-    image: ImageName
+    name: ImageName
 )
 
 object NewImage extends NewtypeCodecs with AutoDerivation {

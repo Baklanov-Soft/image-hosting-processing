@@ -18,7 +18,7 @@ class NewImageCodecSpec extends AnyFunSuite with Matchers with EitherValues {
             |{
             |    "bucket": "00000000-0000-0000-0000-000000000000",
             |    "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
-            |    "image": "original.jpg"
+            |    "name": "original.jpg"
             |}
             |""".stripMargin
         )
