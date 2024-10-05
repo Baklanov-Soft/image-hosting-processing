@@ -42,7 +42,7 @@ Resizer reads `{NEW_IMAGES_TOPIC}` Kafka topic and accepts messages in following
 {
   "bucket": "00000000-0000-0000-0000-000000000000",
   "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
-  "image": "original.jpg"
+  "name": "original.jpg"
 }
 ```
 
@@ -87,7 +87,7 @@ Recognizer reads `{NEW_IMAGES_TOPIC}` Kafka topic and accepts messages in follow
 {
   "bucket": "00000000-0000-0000-0000-000000000000",
   "prefix": "557b036f-c61f-40b6-ba13-4708519a566f",
-  "image": "original.jpg"
+  "name": "original.jpg"
 }
 ```
 
@@ -95,11 +95,9 @@ Recognizer writes output to `{CATEGORIES_TOPIC}` Kafka topic in following format
 
 ```json
 {
-  "image": {
-    "bucket": "00000000-0000-0000-0000-000000000000",
-    "prefix": "d082dd66-5723-4ca3-8401-f78410ecf32e",
-    "name": "original.jpg"
-  },
+  "bucket": "00000000-0000-0000-0000-000000000000",
+  "prefix": "d082dd66-5723-4ca3-8401-f78410ecf32e",
+  "name": "original.jpg",
   "categories": {
     "nsfw": 0.9998799562454224,
     "person": 0.9533286094665527
