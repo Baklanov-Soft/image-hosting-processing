@@ -46,7 +46,7 @@ class ResizingStream[F[_]: Sync: Logger] private (
                            contentType = "image/jpeg"
                          )
 
-                       } *> Logger[F].info(s"Resized image ${msg.image} with sizes ${listOfPreviews.map(_._1)}")
+                       } *> Logger[F].info(s"Resized image ${msg.name} with sizes ${listOfPreviews.map(_._1)}")
                      )
 
             } yield ()

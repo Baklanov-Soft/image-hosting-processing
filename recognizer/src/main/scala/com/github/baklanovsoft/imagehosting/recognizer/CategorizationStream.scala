@@ -35,7 +35,12 @@ class CategorizationStream[F[_]: Async: Logger](
           image      <- Async[F].delay(imageFactory.fromInputStream(imageStream))
           categories <- detection.detect(image, imageMeta)
           nsfw0      <- nsfw.detect(image, imageMeta)
-        } yield Categories(imageMeta, categories = categories ++ nsfw0)
+        } yield Categories(
+          bucket = imageMeta.bucket,
+          prefix = imageMeta.prefix,
+          name = imageMeta.name,
+          categories = categories ++ nsfw0
+        )
       )
 
   /** Transactional fs2kafka stream
